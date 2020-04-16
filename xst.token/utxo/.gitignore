@@ -1,0 +1,11 @@
+.vscode
+cmd/package-lock.json
+cmd/node_modules
+cmd/clpeos
+contract/build/*
+envs/*
+GPATH
+GRTAGS
+GTAGS
+*.abi
+*.wasm
