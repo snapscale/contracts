@@ -12,7 +12,7 @@ void token::create( const name&   issuer,
     check( maximum_supply.is_valid(), "invalid supply");
     check( maximum_supply.amount > 0, "max-supply must be positive");
 
-    stats statstable( get_self(), sym.code().raw() ); // code, scope
+    stats statstable( get_self(), sym.code().raw() );
     auto existing = statstable.find( sym.code().raw() );
     check( existing == statstable.end(), "token with symbol already exists" );
 
@@ -101,7 +101,7 @@ void token::transfer( const name&    from,
 }
 
 void token::sub_balance( const name& owner, const asset& value ) {
-   accounts from_acnts( get_self(), owner.value ); // code, scope
+   accounts from_acnts( get_self(), owner.value );
 
    const auto& from = from_acnts.get( value.symbol.code().raw(), "no balance object found" );
    check( from.balance.amount >= value.amount, "overdrawn balance" );
