@@ -31,19 +31,10 @@ nohup ./keosd --unlock-timeout 31536000 &
 
 ```
 
-第一次跑 激活私链(部署系统合约)
-```bash
-# ***************************
-./1.aoto_activate.sh
-# ***************************
-```
-
-第一次跑 部署utxo合约
+部署utxo合约
 ```bash
 ### 自己用eosio.cdt编译
-cd ~/work/blockchain/cucubao/eosio.cdt/contracts/xst.token/utxo/contract
-~/work/blockchain/cucubao/eosio.cdt/build/bin/eosio-cpp src/token.cpp -o xst.utxo.wasm --abigen -I ./include
-# 编出来的abi与wasm可重命名为 xst.utxo
+eosio.cdt/build/bin/eosio-cpp src/xst.utxo.cpp -o xst.utxo.wasm --abigen -I ./include
 
 ## 在bin目录下跑脚本部署 *********
 #创建合约账户  (带后缀的账户,用eosio可以创建出来)
@@ -77,5 +68,3 @@ nohup ./keosd --unlock-timeout 999999999999 &
 
 > 关闭 keosd
 > `./cleos wallet stop`
-> 如果二次运行时又创建相同的钱包,密码文件会被置空,没备份的话,只能删除wallet下的文件了
-> `rm ~/eosio-wallet//utxo.wallet`
