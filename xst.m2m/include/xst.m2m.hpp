@@ -9,7 +9,7 @@ const name FIX_TOKEN_CONTRACT_ACCOUNT = name("eosio.token");
 const asset FIX_PERSUB = asset(10000, FIX_SYMBOL);      //sub token per time  1.0000
 const asset FIX_MECFEE = asset(5000, FIX_SYMBOL);       //mec fee, FIX_PERSUB > FIX_MECFEE  0.5000
 
-CONTRACT m2musecasexs : public contract {
+class [[eosio::contract("xst.m2m")]] m2musecasexs : public contract {
   using contract::contract;
     
   private:

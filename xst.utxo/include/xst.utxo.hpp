@@ -20,9 +20,9 @@ namespace eosio
 
 using std::string;
 
-const eosio::symbol PEOS_SYMBOL = symbol(symbol_code("PEOS"), 4);
+const eosio::symbol TOKEN_SYMBOL = symbol(symbol_code("UTXO"), 4);
 
-class[[eosio::contract("utxo.token")]] token : public contract
+class[[eosio::contract("xst.utxo")]] token : public contract
 {
  public:
    using contract::contract;
@@ -50,12 +50,16 @@ class[[eosio::contract("utxo.token")]] token : public contract
    struct input {
       uint64_t id;
       signature sig;
+
+      EOSLIB_SERIALIZE( input, (id)(sig) )
    };
 
    struct output {
       public_key pk;
       name account;
       asset quantity;
+
+      EOSLIB_SERIALIZE( output, (pk)(account)(quantity) )
    };
 
    [[eosio::action]] void transferutxo(const name &payer, const std::vector<input> &inputs, const std::vector<output> &outputs, const string &memo);
@@ -81,6 +85,8 @@ class[[eosio::contract("utxo.token")]] token : public contract
       asset balance;
       bool claimed = false;
       uint64_t primary_key() const { return balance.symbol.code().raw(); }
+
+      EOSLIB_SERIALIZE( account, (balance)(claimed) )
    };
 
    struct [[eosio::table]] currency_stats
@@ -90,6 +96,8 @@ class[[eosio::contract("utxo.token")]] token : public contract
       name issuer;
 
       uint64_t primary_key() const { return supply.symbol.code().raw(); }
+
+      EOSLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer) )
    };
 
    struct [[eosio::table]] utxo
@@ -100,6 +108,8 @@ class[[eosio::contract("utxo.token")]] token : public contract
 
       uint64_t primary_key() const { return id; }
       checksum256 by_pk() const { return getKeyHash(pk); }
+
+      EOSLIB_SERIALIZE( utxo, (id)(pk)(amount) )
    };
 
    struct [[eosio::table]] utxo_global
@@ -108,6 +118,8 @@ class[[eosio::contract("utxo.token")]] token : public contract
       uint64_t    next_pk;
 
       uint64_t primary_key() const { return id; }
+
+      EOSLIB_SERIALIZE( utxo_global, (id)(next_pk) )
    };
 
    typedef eosio::multi_index<"accounts"_n, account> accounts;
@@ -120,7 +132,7 @@ class[[eosio::contract("utxo.token")]] token : public contract
 
    static inline checksum256 getKeyHash(const public_key &pk)
    {
-      return sha256(pk.data.begin(), 33);
+      return sha256((const char *)&pk, 33);
    }
 
    void sub_balance(name owner, asset value);
@@ -129,8 +141,6 @@ class[[eosio::contract("utxo.token")]] token : public contract
    void do_claim(name owner, symbol_code sym, name payer);
 
    uint64_t getNextUTXOId();
-
-   const name PEOS_CONTRACT_ACCOUNT    = "thepeostoken"_n;
 };
 
 } // namespace eosio

@@ -1,4 +1,4 @@
-#include <m2musecasexs.hpp>
+#include <xst.m2m.hpp>
 // #include <eosio.token/eosio.token.hpp>
 #include "../../eosio.token/include/eosio.token/eosio.token.hpp"
 
@@ -166,4 +166,4 @@ ACTION m2musecasexs::mgrclear() {
   carclear();
 }
 
-EOSIO_DISPATCH(m2musecasexs, (carauth)(pilepersub)(settlement)(mgrclear))
+// EOSIO_DISPATCH(m2musecasexs, (carauth)(pilepersub)(settlement)(mgrclear))

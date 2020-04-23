@@ -1,8 +1,8 @@
 .vscode
 cmd/package-lock.json
 cmd/node_modules
-cmd/clpeos
-contract/build/*
+cmd/clutxo
+build/*
 envs/*
 GPATH
 GRTAGS

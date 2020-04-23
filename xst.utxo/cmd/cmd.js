@@ -12,17 +12,17 @@ const Conf = require('conf');
 
 const express = require('express')
 
-const hdwallet = require('./wallet')
+// const hdwallet = require('./wallet')
 
 Config.wallet_URL = Config.wallet_URL.replace('~', process.env.HOME);
 
 const config = new Conf({
-    configName: 'clpeosconfig', // Read configuration file
+    configName: 'walletconfig', // Read configuration file
     cwd: './',
     schema: {
         wallet_name: {
             type: 'string',
-            default: ''
+            default: 'pxst'
         },
         wallet_hd_index: {
             type: 'integer',
@@ -31,14 +31,55 @@ const config = new Conf({
     }
 });
 
-let seed = bip39.mnemonicToSeedSync('send invoice')
-hdwallet.initFromMasterSeed(config, seed)
+// let seed = bip39.mnemonicToSeedSync('send invoice')
+// hdwallet.initFromMasterSeed(config, seed)
+
+async function createToken(pubkey, signature, svr_pubkey) { //Related to wallet name
+    return new Promise((resolve, reject) => {
+        const body = [
+            pubkey,
+            signature,
+            svr_pubkey
+        ];
+        const options = {
+            method: "POST",
+            url: Config.wallet_URL + "/v1/wallet/create_token",
+            body: JSON.stringify(body)
+        }
+        request(options, function (err, res, body) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(JSON.parse(body));
+            }
+        })
+    })
+}
+
+let headers;
+async function getHttpHeaders(){
+    sender_pk = Config.eos_conn_info.sender_pk;//'XST83jABXUkPLcpeA5fbgKfokdd5YSP6k6n87wpYrApfW7rY9MqT6'
+    sender_dc = Config.eos_conn_info.sender_dc;//'SIG_K1_K5VCusVxRvRbk25YK5zdvm42B7KnRWba4KBbxnekMabK7DiEvykSYEjAci3sN1zmFso1tTjELpkr4bEQcDcViEnKXt99MN'
+    receiver_pk = Config.eos_conn_info.receiver_pk;//'XST83jABXUkPLcpeA5fbgKfokdd5YSP6k6n87wpYrApfW7rY9MqT6'
+
+    const jwt = await createToken(sender_pk, sender_dc, receiver_pk)
+    // console.log(jwt); // "Authorization:eyJhbGciOiJIUzI1NiJ9..."
+    var keyvalue = jwt.split(":");
+    // console.log(keyvalue[0]);
+    // console.log(keyvalue[1]);
+    return { 'Authorization' : keyvalue[1]}
+
+    // return {'Authorization' : 
+    //         'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1ODY3Nzk1NzksImlhdCI6MTU4Njc3NTk3OSwiaXNzIjoieHN0IiwicHVibGljIjoiWFNUODNqQUJYVWtQTGNwZUE1ZmJnS2Zva2RkNVlTUDZrNm44N3dwWXJBcGZXN3JZOU1xVDYiLCJzaWduYXR1cmUiOiJTSUdfSzFfSzVWQ3VzVnhSdlJiazI1WUs1emR2bTQyQjdLblJXYmE0S0JieG5la01hYks3RGlFdnlrU1lFakFjaTNzTjF6bUZzbzF0VGpFTHBrcjRiRVFjRGNWaUVuS1h0OTlNTiJ9.7WUY3gREMZu8L6jfsXdL7i6MxP2N1jW2XmtRjRAS9VA'
+    //         }
+}
 
 function getChainInfo() {
     return new Promise((resolve, reject) => {
         const options = {
             method: "GET",
             url: Config.eos_conn_info.httpEndpoint + "/v1/chain/get_info",
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) reject(err);
@@ -55,7 +96,8 @@ function getAcount(account) {
         const options = {
             method: "GET",
             url: Config.eos_conn_info.httpEndpoint + "/v1/chain/get_account",
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) reject(err);
@@ -72,7 +114,8 @@ function getKeyAcount(key) { //Get the accounts corresponding to the public key
         const options = {
             method: "GET",
             url: Config.eos_conn_info.httpEndpoint + "/v1/history/get_key_accounts",
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) reject(err);
@@ -93,7 +136,8 @@ function getCurrencyBalance(code, account_name, symbol) {
         const options = {
             method: "POST",
             url: Config.eos_conn_info.httpEndpoint + "/v1/chain/get_currency_balance",
-            body: JSON.stringify(body) 
+            body: JSON.stringify(body),
+            headers: headers
         }
 
         request(options, function (err, res, body) {
@@ -121,6 +165,7 @@ function getWalletKeyList() {
         const options = {
             method: "POST",
             url: Config.wallet_URL + "/v1/wallet/get_public_keys",
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) reject(err);
@@ -145,7 +190,8 @@ function createKey() { //Related to wallet name
         const options = {
             method: "POST",
             url: Config.wallet_URL + "/v1/wallet/create_key",
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
 
         request(options, function (err, res, body) {
@@ -174,7 +220,8 @@ async function signProvider(buf, sign) {
         const options = {
             method: "POST",
             url: Config.wallet_URL + "/v1/wallet/sign_transaction",
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) reject(err);
@@ -197,7 +244,8 @@ async function signDigest(digest, key) {
         const options = {
             method: "POST",
             url: Config.wallet_URL + "/v1/wallet/sign_digest",
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) {
@@ -322,7 +370,7 @@ function fixBufferEndianForEOS(buf) {
 }
 
 function getAmount(asset, symbol) {
-    symbol = symbol || Config.contract_info.symbol;//'PEOS'
+    symbol = symbol || Config.contract_info.symbol;
     let a = asset.split(' ');
     if (a[1] !== symbol) 
         return 0.0;
@@ -330,11 +378,12 @@ function getAmount(asset, symbol) {
 } 
 
 function formatAmount(asset, symbol) {
-    return `${asset.toFixed(4)} ${symbol || Config.contract_info.symbol}` //'PEOS'
+    return `${asset.toFixed(4)} ${symbol || Config.contract_info.symbol}` 
 }
 
 async function getUTXOsForKey(pk) {
-    let hash = fixBufferEndianForEOS(sha256(PublicKey.fromString(pk).toBuffer(), 'binary')).toString('hex')
+    // let hash = fixBufferEndianForEOS(sha256(PublicKey.fromString(pk, Config.eos_conn_info.keyPrefix).toBuffer(), 'binary')).toString('hex')
+    let hash = sha256(PublicKey.fromString(pk, Config.eos_conn_info.keyPrefix).toBuffer(), 'hex')
     return new Promise((resolve, reject) => {
         let body = {
             "json": true,
@@ -354,7 +403,8 @@ async function getUTXOsForKey(pk) {
         const options = {
             method: "GET",
             url: Config.eos_conn_info.httpEndpoint + "/v1/chain/get_table_rows", //View Multi_index table data in a contract
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
+            headers: headers
         }
         request(options, function (err, res, body) {
             if (err) { reject(err); return; }
@@ -420,7 +470,7 @@ async function init() {
     
     Config.eos_conn_info.signProvider = signProvider;
     Config.eos_conn_info.transactionHeaders = makeTransactionHeader; 
-
+    Config.eos_conn_info.fetchConfiguration = {headers : headers}; // eosjs used
     eos = Eos(Config.eos_conn_info);
 }
 
@@ -445,7 +495,7 @@ async function loadutxo(from, to, amount) {
         }
     } 
 
-    if(!PublicKey.isValid(to)) {
+    if(!PublicKey.isValid(to, Config.eos_conn_info.keyPrefix)) {
         console.error("ERROR: Invalid to address")
         return
     }
@@ -497,12 +547,12 @@ async function transferutxo(to, amount, cmd) {
 
     let outputs = []
 
-    if(PublicKey.isValid(to)) { //When transferring to a valid address, `account` in output is '' 
+    if(PublicKey.isValid(to, Config.eos_conn_info.keyPrefix)) { //When transferring to a valid address, `account` in output is '' 
         outputs.push({ pk:to, account: '', quantity: amount })
     } else {
         // When transferring to an account, `account` in the output is the account name; 
         // the pk here can be specified at will, and the token will not be transferred to this address.
-        outputs.push({ pk:'EOS5VFSVbso9eZn8vzLWbsWBMV1K4sYsZnxnePnMayJtMaksMU8my', account: to, quantity: amount })
+        outputs.push({ pk:'XST6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV', account: to, quantity: amount })
     }
 
     let amountNum = getAmount(amount)
@@ -519,7 +569,7 @@ async function transferutxo(to, amount, cmd) {
 
     if (change > 0) { //Need to change
         let changeAddress = await wallet.createKey()
-        outputs.push({ pk:changeAddress, account:"", quantity: `${change.toFixed(4)} `+ Config.contract_info.symbol })//PEOS
+        outputs.push({ pk:changeAddress, account:"", quantity: `${change.toFixed(4)} `+ Config.contract_info.symbol })
     }
 
     if (change < 0) {
@@ -724,9 +774,11 @@ async function getAllAccounts(cmd) {
 }
 
 async function _main() {
+    headers = await getHttpHeaders()
+
     program
     .version('0.1', '-v --version')
-    .description('UTXO wallet for pEOS. Learn more at https://peos.one')
+    .description('UTXO wallet for Snapscale. Learn more at https://xeniro.io')
     .option('-n, --name <wallet>', 'EOS wallet name', config.get('wallet_name'))
 
     program

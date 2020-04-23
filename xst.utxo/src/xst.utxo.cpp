@@ -3,7 +3,7 @@
  *  @copyright defined in eos/LICENSE.txt
  */
 
-#include <token.hpp>
+#include <xst.utxo.hpp>
 
 namespace eosio
 {
@@ -274,7 +274,7 @@ void token::transferutxo(const name &payer, const std::vector<input> &inputs, co
    auto p = pack(outputs);//Packaged into bytes, Pack is a function provided by eosio.cdt
    checksum256 outputsDigest = sha256(&p[0], p.size());
 
-   asset inputSum = asset(0, PEOS_SYMBOL);
+   asset inputSum = asset(0, TOKEN_SYMBOL);
    for(auto in = inputs.cbegin() ; in != inputs.cend() ; ++in) {
       sign_data sd = {in->id, outputsDigest};
       checksum256 digest = sha256((const char *)&sd, sizeof(sign_data));
@@ -287,11 +287,11 @@ void token::transferutxo(const name &payer, const std::vector<input> &inputs, co
       utxostable.erase(utxo);
    }
 
-   asset outputSum = asset(0, PEOS_SYMBOL);
+   asset outputSum = asset(0, TOKEN_SYMBOL);
    for(auto oIter = outputs.cbegin() ; oIter != outputs.cend() ; ++oIter) {
       auto q = oIter->quantity;
       check(q.is_valid(), "Invalid asset");
-      check(q.symbol == PEOS_SYMBOL, "Symbol precision mismatch");
+      check(q.symbol == TOKEN_SYMBOL, "Symbol precision mismatch");
       check(q.amount > 0, "Output amount must be positive");
       outputSum += q;
 
@@ -368,4 +368,4 @@ uint64_t token::getNextUTXOId()
 
 } // namespace eosio
 
-EOSIO_DISPATCH(eosio::token, (create)(update)(issue)(transfer)(claim)(recover)(retire)(close)(transferutxo)(loadutxo)(verifyring))
+// EOSIO_DISPATCH(eosio::token, (create)(update)(issue)(transfer)(claim)(recover)(retire)(close)(transferutxo)(loadutxo))
