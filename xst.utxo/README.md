@@ -1,4 +1,4 @@
-# EOS UTXO Implementation
+# UTXO Implementation
 
 ## ./contract/
 

@@ -1,15 +1,16 @@
-#include <eosio/eosio.hpp>
-#include <eosio/asset.hpp>
+#include "typedef.hpp"
+
+#include XST_HEAD_ASSET
 
 using namespace std;
-using namespace eosio;
+using namespace XST_FLAG;
 
 const symbol FIX_SYMBOL = symbol(symbol_code("XST"), 4);
-const name FIX_TOKEN_CONTRACT_ACCOUNT = name("eosio.token");
+const name FIX_TOKEN_CONTRACT_ACCOUNT = name(XST_NAME_TOKEN);
 const asset FIX_PERSUB = asset(10000, FIX_SYMBOL);      //sub token per time  1.0000
 const asset FIX_MECFEE = asset(5000, FIX_SYMBOL);       //mec fee, FIX_PERSUB > FIX_MECFEE  0.5000
 
-class [[eosio::contract("xst.m2m")]] m2musecasexs : public contract {
+class [[XST_FLAG::contract("xst.m2m")]] m2musecasexs : public contract {
   using contract::contract;
     
   private:

@@ -1,15 +1,19 @@
 #pragma once
 
-#include <eosio/asset.hpp>
+#define RESOURCE_UNLIMIT
+
+#ifndef RESOURCE_UNLIMIT
+
+#include XST_HEAD_ASSET
 #include <eosio/multi_index.hpp>
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::asset;
-   using eosio::symbol;
+   using XST_FLAG::asset;
+   using XST_FLAG::symbol;
 
    /**
-    * @addtogroup eosiosystem
+    * @addtogroup XST_SYSTEM
     * @{
     */
 
@@ -19,14 +23,14 @@ namespace eosiosystem {
     * The state of the bancor exchange is entirely contained within this struct.
     * There are no external side effects associated with using this API.
     */
-   struct [[eosio::table, eosio::contract("eosio.system")]] exchange_state {
+   struct [[XST_FLAG::table, XST_FLAG::contract(XST_NAME_SYSTEM)]] exchange_state {
       asset    supply;
 
       struct connector {
          asset balance;
          double weight = .5;
 
-         EOSLIB_SERIALIZE( connector, (balance)(weight) )
+         XSTLIB_SERIALIZE( connector, (balance)(weight) )
       };
 
       connector base;
@@ -46,9 +50,11 @@ namespace eosiosystem {
                                        int64_t inp_reserve,
                                        int64_t out );
 
-      EOSLIB_SERIALIZE( exchange_state, (supply)(base)(quote) )
+      XSTLIB_SERIALIZE( exchange_state, (supply)(base)(quote) )
    };
 
-   typedef eosio::multi_index< "rammarket"_n, exchange_state > rammarket;
-   /** @}*/ // enf of @addtogroup eosiosystem
-} /// namespace eosiosystem
+   typedef XST_FLAG::multi_index< "rammarket"_n, exchange_state > rammarket;
+   /** @}*/ // enf of @addtogroup XST_SYSTEM
+} /// namespace XST_SYSTEM
+
+#endif // !RESOURCE_UNLIMIT

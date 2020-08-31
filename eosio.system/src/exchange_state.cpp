@@ -1,12 +1,14 @@
 #include <eosio.system/exchange_state.hpp>
 
+#ifndef RESOURCE_UNLIMIT
+
 #include <eosio/check.hpp>
 
 #include <cmath>
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::check;
+   using XST_FLAG::check;
 
    asset exchange_state::convert_to_exchange( connector& reserve, const asset& payment )
    {
@@ -107,4 +109,6 @@ namespace eosiosystem {
       return inp;
    }
 
-} /// namespace eosiosystem
+} /// namespace XST_SYSTEM
+
+#endif // !RESOURCE_UNLIMIT

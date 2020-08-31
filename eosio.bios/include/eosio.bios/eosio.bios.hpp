@@ -1,11 +1,11 @@
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_ACTION
+#include XST_HEAD_CRYPTO
 
-#include <eosio/action.hpp>
-#include <eosio/crypto.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/fixed_bytes.hpp>
-#include <eosio/privileged.hpp>
-#include <eosio/producer_schedule.hpp>
+#include XST_HEAD_FIXED_BYTES
+#include XST_HEAD_PRIVILEGED
+#include XST_HEAD_PRODUCER_SCHEDULE
 
 /**
  * EOSIO Contracts
@@ -17,39 +17,39 @@
  *
  * This repository contains examples of these privileged contracts that are useful when deploying,
  * managing, and/or using an EOSIO blockchain. They are provided for reference purposes:
- * - eosio.bios
- * - eosio.system
- * - eosio.msig
- * - eosio.wrap
+ * - XST_FLAG.bios
+ * - XST_FLAG.system
+ * - XST_FLAG.msig
+ * - XST_FLAG.wrap
  *
  * The following unprivileged contract(s) are also part of the system.
- * - eosio.token
+ * - XST_FLAG.token
  */
 
 namespace eosiobios {
 
-   using eosio::action_wrapper;
-   using eosio::check;
-   using eosio::checksum256;
-   using eosio::ignore;
-   using eosio::name;
-   using eosio::permission_level;
-   using eosio::public_key;
+   using XST_FLAG::action_wrapper;
+   using XST_FLAG::check;
+   using XST_FLAG::checksum256;
+   using XST_FLAG::ignore;
+   using XST_FLAG::name;
+   using XST_FLAG::permission_level;
+   using XST_FLAG::public_key;
 
    struct permission_level_weight {
       permission_level  permission;
       uint16_t          weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( permission_level_weight, (permission)(weight) )
+      XSTLIB_SERIALIZE( permission_level_weight, (permission)(weight) )
    };
 
    struct key_weight {
-      eosio::public_key  key;
+      XST_FLAG::public_key  key;
       uint16_t           weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( key_weight, (key)(weight) )
+      XSTLIB_SERIALIZE( key_weight, (key)(weight) )
    };
 
    struct wait_weight {
@@ -57,7 +57,7 @@ namespace eosiobios {
       uint16_t           weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( wait_weight, (wait_sec)(weight) )
+      XSTLIB_SERIALIZE( wait_weight, (wait_sec)(weight) )
    };
 
    struct authority {
@@ -67,7 +67,7 @@ namespace eosiobios {
       std::vector<wait_weight>              waits;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( authority, (threshold)(keys)(accounts)(waits) )
+      XSTLIB_SERIALIZE( authority, (threshold)(keys)(accounts)(waits) )
    };
 
    struct block_header {
@@ -78,14 +78,14 @@ namespace eosiobios {
       checksum256                               transaction_mroot;
       checksum256                               action_mroot;
       uint32_t                                  schedule_version = 0;
-      std::optional<eosio::producer_schedule>   new_producers;
+      std::optional<XST_FLAG::producer_schedule>   new_producers;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE(block_header, (timestamp)(producer)(confirmed)(previous)(transaction_mroot)(action_mroot)
+      XSTLIB_SERIALIZE(block_header, (timestamp)(producer)(confirmed)(previous)(transaction_mroot)(action_mroot)
                                      (schedule_version)(new_producers))
    };
 
-   class [[eosio::contract("eosio.bios")]] bios : public eosio::contract {
+   class [[XST_FLAG::contract("eosio.bios")]] bios : public XST_FLAG::contract {
       public:
          using contract::contract;
          /**
@@ -100,7 +100,7 @@ namespace eosiobios {
           * therefore, this method will execute an inline buyram from receiver for newacnt in
           * an amount equal to the current new account creation fee.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void newaccount( name             creator,
                           name             name,
                           ignore<authority> owner,
@@ -113,7 +113,7 @@ namespace eosiobios {
           * @param parem - the parent of the permission which is updated,
           * @param aut - the json describing the permission authorization.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void updateauth(  ignore<name>  account,
                            ignore<name>  permission,
                            ignore<name>  parent,
@@ -125,7 +125,7 @@ namespace eosiobios {
           * @param account - the account for which the permission authorization is deleted,
           * @param permission - the permission name been deleted.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void deleteauth( ignore<name>  account,
                           ignore<name>  permission ) {}
 
@@ -135,8 +135,8 @@ namespace eosiobios {
           * This is useful because when doing authorization checks, the EOSIO based blockchain starts with the
           * action needed to be authorized (and the contract belonging to), and looks up which permission
           * is needed to pass authorization validation. If a link is set, that permission is used for authoraization
-          * validation otherwise then active is the default, with the exception of `eosio.any`.
-          * `eosio.any` is an implicit permission which exists on every account; you can link actions to `eosio.any`
+          * validation otherwise then active is the default, with the exception of `XST_FLAG.any`.
+          * `XST_FLAG.any` is an implicit permission which exists on every account; you can link actions to `XST_FLAG.any`
           * and that will make it so linked actions are accessible to any permissions defined for the account.
           *
           * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
@@ -144,7 +144,7 @@ namespace eosiobios {
           * @param type - the action to be linked,
           * @param requirement - the permission to be linked.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void linkauth(  ignore<name>    account,
                          ignore<name>    code,
                          ignore<name>    type,
@@ -157,7 +157,7 @@ namespace eosiobios {
           * @param code - the owner of the action to be unlinked,
           * @param type - the action to be unlinked.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void unlinkauth( ignore<name>  account,
                           ignore<name>  code,
                           ignore<name>  type ) {}
@@ -168,7 +168,7 @@ namespace eosiobios {
           * @param canceling_auth - the permission that authorizes this action,
           * @param trx_id - the deferred transaction id to be cancelled.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void canceldelay( ignore<permission_level> canceling_auth, ignore<checksum256> trx_id ) {}
 
          /**
@@ -179,7 +179,7 @@ namespace eosiobios {
           * @param vmversion - reserved, set it to zero.
           * @param code - the code content to be set, in the form of a blob binary..
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setcode( name account, uint8_t vmtype, uint8_t vmversion, const std::vector<char>& code ) {}
 
          /** @}*/
@@ -192,7 +192,7 @@ namespace eosiobios {
           * @param account - the name of the account to set the abi for
           * @param abi     - the abi hash represented as a vector of characters
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setabi( name account, const std::vector<char>& abi );
 
          /**
@@ -203,7 +203,7 @@ namespace eosiobios {
           * @param sender_id - the id for the deferred transaction chosen by the sender,
           * @param sent_trx - the deferred transaction that failed.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void onerror( ignore<uint128_t> sender_id, ignore<std::vector<char>> sent_trx );
 
          /**
@@ -211,7 +211,7 @@ namespace eosiobios {
           * @param account - the account to set the privileged status for.
           * @param is_priv - 0 for false, > 0 for true.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setpriv( name account, uint8_t is_priv );
 
          /**
@@ -222,7 +222,7 @@ namespace eosiobios {
           * @param net_weight - fractionally proportionate net limit of available resources based on (weight / total_weight_of_all_accounts)
           * @param cpu_weight - fractionally proportionate cpu limit of available resources based on (weight / total_weight_of_all_accounts)
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setalimits( name account, int64_t ram_bytes, int64_t net_weight, int64_t cpu_weight );
 
          /**
@@ -233,16 +233,16 @@ namespace eosiobios {
           *
           * @param schedule - New list of active producers to set
           */
-         [[eosio::action]]
-         void setprods( const std::vector<eosio::producer_authority>& schedule );
+         [[XST_FLAG::action]]
+         void setprods( const std::vector<XST_FLAG::producer_authority>& schedule );
 
          /**
           * Set params action, sets the blockchain parameters. By tuning these parameters, various degrees of customization can be achieved.
           *
           * @param params - New blockchain parameters to set
           */
-         [[eosio::action]]
-         void setparams( const eosio::blockchain_parameters& params );
+         [[XST_FLAG::action]]
+         void setparams( const XST_FLAG::blockchain_parameters& params );
 
          /**
           * Require authorization action, checks if the account name `from` passed in as param has authorization to access
@@ -250,7 +250,7 @@ namespace eosiobios {
           *
           * @param from - the account name to authorize
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void reqauth( name from );
 
          /**
@@ -258,26 +258,26 @@ namespace eosiobios {
           *
           * @param feature_digest - hash of the protocol feature to activate.
           */
-         [[eosio::action]]
-         void activate( const eosio::checksum256& feature_digest );
+         [[XST_FLAG::action]]
+         void activate( const XST_FLAG::checksum256& feature_digest );
 
          /**
           * Require activated action, asserts that a protocol feature has been activated
           *
           * @param feature_digest - hash of the protocol feature to check for activation.
           */
-         [[eosio::action]]
-         void reqactivated( const eosio::checksum256& feature_digest );
+         [[XST_FLAG::action]]
+         void reqactivated( const XST_FLAG::checksum256& feature_digest );
 
-         struct [[eosio::table]] abi_hash {
+         struct [[XST_FLAG::table]] abi_hash {
             name              owner;
             checksum256       hash;
             uint64_t primary_key()const { return owner.value; }
 
-            EOSLIB_SERIALIZE( abi_hash, (owner)(hash) )
+            XSTLIB_SERIALIZE( abi_hash, (owner)(hash) )
          };
 
-         typedef eosio::multi_index< "abihash"_n, abi_hash > abi_hash_table;
+         typedef XST_FLAG::multi_index< "abihash"_n, abi_hash > abi_hash_table;
 
          using newaccount_action = action_wrapper<"newaccount"_n, &bios::newaccount>;
          using updateauth_action = action_wrapper<"updateauth"_n, &bios::updateauth>;

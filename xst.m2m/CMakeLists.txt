@@ -2,7 +2,9 @@ add_contract(xst.m2m xst.m2m ${CMAKE_CURRENT_SOURCE_DIR}/src/xst.m2m.cpp)
 
 target_include_directories(xst.m2m
    PUBLIC
-   ${CMAKE_CURRENT_SOURCE_DIR}/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../eosio.token/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(xst.m2m
    PROPERTIES

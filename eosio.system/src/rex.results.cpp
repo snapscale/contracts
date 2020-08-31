@@ -1,4 +1,5 @@
-#include <eosio.system/rex.results.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_REX
 
 void rex_results::buyresult( const asset& rex_received ) { }
 

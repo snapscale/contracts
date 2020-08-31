@@ -1,10 +1,11 @@
-#include <eosio/action.hpp>
-#include <eosio/crypto.hpp>
-#include <eosio/permission.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_MSIG
+#include XST_HEAD_ACTION
+#include XST_HEAD_CRYPTO
+#include XST_HEAD_PERMISSION
 
-#include <eosio.msig/eosio.msig.hpp>
 
-namespace eosio {
+namespace XST_FLAG {
 
 void multisig::propose( ignore<name> proposer,
                         ignore<name> proposal_name,
@@ -23,7 +24,7 @@ void multisig::propose( ignore<name> proposer,
    _ds >> _trx_header;
 
    require_auth( _proposer );
-   check( _trx_header.expiration >= eosio::time_point_sec(current_time_point()), "transaction expired" );
+   check( _trx_header.expiration >= XST_FLAG::time_point_sec(current_time_point()), "transaction expired" );
    //check( trx_header.actions.size() > 0, "transaction must have at least one action" );
 
    proposals proptable( get_self(), _proposer.value );
@@ -57,7 +58,7 @@ void multisig::propose( ignore<name> proposer,
 }
 
 void multisig::approve( name proposer, name proposal_name, permission_level level,
-                        const eosio::binary_extension<eosio::checksum256>& proposal_hash )
+                        const XST_FLAG::binary_extension<XST_FLAG::checksum256>& proposal_hash )
 {
    require_auth( level );
 
@@ -122,7 +123,7 @@ void multisig::cancel( name proposer, name proposal_name, name canceler ) {
    auto& prop = proptable.get( proposal_name.value, "proposal not found" );
 
    if( canceler != proposer ) {
-      check( unpack<transaction_header>( prop.packed_transaction ).expiration < eosio::time_point_sec(current_time_point()), "cannot cancel until expiration" );
+      check( unpack<transaction_header>( prop.packed_transaction ).expiration < XST_FLAG::time_point_sec(current_time_point()), "cannot cancel until expiration" );
    }
    proptable.erase(prop);
 
@@ -147,7 +148,7 @@ void multisig::exec( name proposer, name proposal_name, name executer ) {
    transaction_header trx_header;
    datastream<const char*> ds( prop.packed_transaction.data(), prop.packed_transaction.size() );
    ds >> trx_header;
-   check( trx_header.expiration >= eosio::time_point_sec(current_time_point()), "transaction expired" );
+   check( trx_header.expiration >= XST_FLAG::time_point_sec(current_time_point()), "transaction expired" );
 
    approvals apptable( get_self(), proposer.value );
    auto apps_it = apptable.find( proposal_name.value );
@@ -204,4 +205,4 @@ void multisig::invalidate( name account ) {
    }
 }
 
-} /// namespace eosio
+} /// namespace XST_FLAG

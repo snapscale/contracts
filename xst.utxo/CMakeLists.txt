@@ -2,7 +2,8 @@ add_contract(xst.utxo xst.utxo ${CMAKE_CURRENT_SOURCE_DIR}/src/xst.utxo.cpp)
 
 target_include_directories(xst.utxo
    PUBLIC
-   ${CMAKE_CURRENT_SOURCE_DIR}/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(xst.utxo
    PROPERTIES

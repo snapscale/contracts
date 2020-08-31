@@ -1,12 +1,12 @@
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_ASSET
 
-#include <eosio/asset.hpp>
-#include <eosio/eosio.hpp>
 #include <eosio/name.hpp>
 
-using eosio::action_wrapper;
-using eosio::asset;
-using eosio::name;
+using XST_FLAG::action_wrapper;
+using XST_FLAG::asset;
+using XST_FLAG::name;
 
 /**
  * The actions `buyresult`, `sellresult`, `rentresult`, and `orderresult` of `rex.results` are all no-ops. 
@@ -14,17 +14,17 @@ using eosio::name;
  * An inline convenience action does not have any effect, however, 
  * its data includes the result of the parent action and appears in its trace.
  */
-class [[eosio::contract("rex.results")]] rex_results : eosio::contract {
+class [[XST_FLAG::contract("rex.results")]] rex_results : XST_FLAG::contract {
    public:
 
-      using eosio::contract::contract;
+      using XST_FLAG::contract::contract;
 
       /**
        * Buyresult action.
        *
        * @param rex_received - amount of tokens used in buy order
        */
-      [[eosio::action]]
+      [[XST_FLAG::action]]
       void buyresult( const asset& rex_received );
 
       /**
@@ -32,7 +32,7 @@ class [[eosio::contract("rex.results")]] rex_results : eosio::contract {
        *
        * @param proceeds - amount of tokens used in sell order
        */
-      [[eosio::action]]
+      [[XST_FLAG::action]]
       void sellresult( const asset& proceeds );
 
       /**
@@ -41,7 +41,7 @@ class [[eosio::contract("rex.results")]] rex_results : eosio::contract {
        * @param owner - the owner of the order
        * @param proceeds - amount of tokens used in order
        */
-      [[eosio::action]]
+      [[XST_FLAG::action]]
       void orderresult( const name& owner, const asset& proceeds );
 
       /**
@@ -49,7 +49,7 @@ class [[eosio::contract("rex.results")]] rex_results : eosio::contract {
        *
        * @param rented_tokens - amount of rented tokens
        */
-      [[eosio::action]]
+      [[XST_FLAG::action]]
       void rentresult( const asset& rented_tokens );
 
       using buyresult_action   = action_wrapper<"buyresult"_n,   &rex_results::buyresult>;

@@ -1,17 +1,17 @@
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_CRYPTO
 
-#include <eosio/crypto.hpp>
-#include <eosio/eosio.hpp>
 
 namespace eosioboot {
 
-   using eosio::action_wrapper;
-   using eosio::check;
-   using eosio::checksum256;
-   using eosio::ignore;
-   using eosio::name;
-   using eosio::permission_level;
-   using eosio::public_key;
+   using XST_FLAG::action_wrapper;
+   using XST_FLAG::check;
+   using XST_FLAG::checksum256;
+   using XST_FLAG::ignore;
+   using XST_FLAG::name;
+   using XST_FLAG::permission_level;
+   using XST_FLAG::public_key;
 
    /**
     * A weighted permission.
@@ -26,7 +26,7 @@ namespace eosioboot {
       uint16_t          weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( permission_level_weight, (permission)(weight) )
+      XSTLIB_SERIALIZE( permission_level_weight, (permission)(weight) )
    };
 
    /**
@@ -35,11 +35,11 @@ namespace eosioboot {
     * @details A weighted key is defined by a public key and an associated weight.
     */
    struct key_weight {
-      eosio::public_key  key;
+      XST_FLAG::public_key  key;
       uint16_t           weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( key_weight, (key)(weight) )
+      XSTLIB_SERIALIZE( key_weight, (key)(weight) )
    };
 
    /**
@@ -52,7 +52,7 @@ namespace eosioboot {
       uint16_t           weight;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( wait_weight, (wait_sec)(weight) )
+      XSTLIB_SERIALIZE( wait_weight, (wait_sec)(weight) )
    };
 
    /**
@@ -71,20 +71,20 @@ namespace eosioboot {
       std::vector<wait_weight>              waits;
 
       // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( authority, (threshold)(keys)(accounts)(waits) )
+      XSTLIB_SERIALIZE( authority, (threshold)(keys)(accounts)(waits) )
    };
 
    /**
-    * @defgroup eosioboot eosio.boot
+    * @defgroup eosioboot XST_FLAG.boot
     * @ingroup eosiocontracts
     *
-    * eosio.boot is a extremely minimalistic system contract that only supports the native actions and an
+    * XST_FLAG.boot is a extremely minimalistic system contract that only supports the native actions and an
     * activate action that allows activating desired protocol features prior to deploying a system contract
-    * with more features such as eosio.bios or eosio.system.
+    * with more features such as XST_FLAG.bios or XST_FLAG.system.
     *
     * @{
     */
-   class [[eosio::contract("eosio.boot")]] boot : public eosio::contract {
+   class [[XST_FLAG::contract("eosio.boot")]] boot : public XST_FLAG::contract {
       public:
          using contract::contract;
          /**
@@ -105,7 +105,7 @@ namespace eosioboot {
           * @param owner - the authority for the owner permission of the new account
           * @param active - the authority for the active permission of the new account
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void newaccount( name             creator,
                           name             name,
                           ignore<authority> owner,
@@ -120,7 +120,7 @@ namespace eosioboot {
           * @param parem - the parent of the permission which is updated,
           * @param aut - the json describing the permission authorization.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void updateauth(  ignore<name>  account,
                            ignore<name>  permission,
                            ignore<name>  parent,
@@ -134,7 +134,7 @@ namespace eosioboot {
           * @param account - the account for which the permission authorization is deleted,
           * @param permission - the permission name been deleted.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void deleteauth( ignore<name>  account,
                           ignore<name>  permission ) {}
 
@@ -146,8 +146,8 @@ namespace eosioboot {
           * This is useful because when doing authorization checks, the EOSIO based blockchain starts with the
           * action needed to be authorized (and the contract belonging to), and looks up which permission
           * is needed to pass authorization validation. If a link is set, that permission is used for authoraization
-          * validation otherwise then active is the default, with the exception of `eosio.any`.
-          * `eosio.any` is an implicit permission which exists on every account; you can link actions to `eosio.any`
+          * validation otherwise then active is the default, with the exception of `XST_FLAG.any`.
+          * `XST_FLAG.any` is an implicit permission which exists on every account; you can link actions to `XST_FLAG.any`
           * and that will make it so linked actions are accessible to any permissions defined for the account.
           *
           * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
@@ -155,7 +155,7 @@ namespace eosioboot {
           * @param type - the action to be linked,
           * @param requirement - the permission to be linked.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void linkauth(  ignore<name>    account,
                          ignore<name>    code,
                          ignore<name>    type,
@@ -170,7 +170,7 @@ namespace eosioboot {
           * @param code - the owner of the action to be unlinked,
           * @param type - the action to be unlinked.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void unlinkauth( ignore<name>  account,
                           ignore<name>  code,
                           ignore<name>  type ) {}
@@ -183,7 +183,7 @@ namespace eosioboot {
           * @param canceling_auth - the permission that authorizes this action,
           * @param trx_id - the deferred transaction id to be cancelled.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void canceldelay( ignore<permission_level> canceling_auth, ignore<checksum256> trx_id ) {}
 
          /**
@@ -196,7 +196,7 @@ namespace eosioboot {
           * @param vmversion - reserved, set it to zero.
           * @param code - the code content to be set, in the form of a blob binary..
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setcode( name account, uint8_t vmtype, uint8_t vmversion, const std::vector<char>& code ) {}
 
          /**
@@ -207,7 +207,7 @@ namespace eosioboot {
           * @param account - the name of the account to set the abi for
           * @param abi     - the abi hash represented as a vector of characters
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void setabi( name account, const std::vector<char>& abi ) {}
 
          /** @}*/
@@ -222,7 +222,7 @@ namespace eosioboot {
           * @param sender_id - the id for the deferred transaction chosen by the sender,
           * @param sent_trx - the deferred transaction that failed.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void onerror( ignore<uint128_t> sender_id, ignore<std::vector<char>> sent_trx );
 
          /**
@@ -232,8 +232,8 @@ namespace eosioboot {
           *
           * @param feature_digest - hash of the protocol feature to activate.
           */
-         [[eosio::action]]
-         void activate( const eosio::checksum256& feature_digest );
+         [[XST_FLAG::action]]
+         void activate( const XST_FLAG::checksum256& feature_digest );
 
          /**
           * Asserts that a protocol feature has been activated.
@@ -242,8 +242,8 @@ namespace eosioboot {
           *
           * @param feature_digest - hash of the protocol feature to check for activation.
           */
-         [[eosio::action]]
-         void reqactivated( const eosio::checksum256& feature_digest );
+         [[XST_FLAG::action]]
+         void reqactivated( const XST_FLAG::checksum256& feature_digest );
 
          using newaccount_action = action_wrapper<"newaccount"_n, &boot::newaccount>;
          using updateauth_action = action_wrapper<"updateauth"_n, &boot::updateauth>;
@@ -256,5 +256,5 @@ namespace eosioboot {
          using activate_action = action_wrapper<"activate"_n, &boot::activate>;
          using reqactivated_action = action_wrapper<"reqactivated"_n, &boot::reqactivated>;
    };
-   /** @}*/ // end of @defgroup eosioboot eosio.boot
+   /** @}*/ // end of @defgroup eosioboot XST_FLAG.boot
 } /// namespace eosioboot

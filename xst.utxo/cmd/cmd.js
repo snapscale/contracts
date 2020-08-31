@@ -22,7 +22,7 @@ const config = new Conf({
     schema: {
         wallet_name: {
             type: 'string',
-            default: 'pxst'
+            default: 'utxo'
         },
         wallet_hd_index: {
             type: 'integer',

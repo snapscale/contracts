@@ -1,14 +1,15 @@
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
+#include XST_HEAD_TOKEN
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::current_time_point;
-   using eosio::microseconds;
-   using eosio::token;
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::microseconds;
+   using XST_FLAG::token;
 
    void system_contract::onblock( ignore<block_header> ) {
-      using namespace eosio;
+      using namespace XST_FLAG;
 
       require_auth(get_self());
 
@@ -56,7 +57,9 @@ namespace eosiosystem {
                 (current_time_point() - _gstate.thresh_activated_stake_time) > microseconds(14 * useconds_per_day)
             ) {
                _gstate.last_name_close = timestamp;
+#ifndef RESOURCE_UNLIMIT
                channel_namebid_to_rex( highest->high_bid );
+#endif // !RESOURCE_UNLIMIT
                idx.modify( highest, same_payer, [&]( auto& b ){
                   b.high_bid = -b.high_bid;
                });
@@ -65,7 +68,81 @@ namespace eosiosystem {
       }
    }
 
+   void system_contract::onfee( const name &actor, const asset& fee, const name &bpname , const name &mec ) {
+      
+      check( fee.amount > 0, "fee must > 0" );
+      require_auth(actor);
+      
+      if(actor != XST_FLAG_N ){
+         double  gasfee    = fee.amount;
+         int64_t to_bp     = int64_t(gasfee * 0.1);
+         int64_t to_mec    = fee.amount - to_bp;
+
+         token::transfer_action tosaving_act{ token_account, { {actor, active_permission} } };
+         tosaving_act.send(actor, saving_account, asset(gasfee,  core_symbol()), "gasfee" );
+         print("deduct ",name{actor}, " fee=",fee ,"\n");
+
+         rewards_table rewards(get_self(),  get_self().value );
+         auto update_raw = [&rewards]( const name &owner, const asset& fee, bool isbp){
+            auto itr = rewards.find( owner.value );
+            if ( itr != rewards.end() ) {
+               rewards.modify( itr, owner, [&](auto& r) {
+                     r.balance += fee;
+                     if(isbp){
+                        print("update BP node ",name{owner}, " +rewards ",fee ,", banlace=",r.balance, "\n");
+                     }else {
+                        print("update MEC node ",name{owner}, " +rewards ",fee ,", banlace=",r.balance, "\n");
+                     }
+                     
+                  });
+            } else {
+               rewards.emplace( owner, [&](auto& r) {
+                     r.owner   = owner;
+                     r.balance = fee;
+                     if(isbp){
+                        print("update BP node ",name{owner}, " rewards ",fee ,", banlace=",r.balance, "\n");
+                     }else {
+                        print("update MEC node ",name{owner}, " rewards ",fee ,", banlace=",r.balance, "\n");
+                     }
+                     
+                  });
+            }
+         };
+         update_raw(bpname, asset(to_bp,  core_symbol()), true);
+         update_raw(mec,    asset(to_mec, core_symbol()), false);
+
+      }
+      
+   }
+
    void system_contract::claimrewards( const name& owner ) {
+      #ifdef   RESOURCE_UNLIMIT
+      require_auth( owner );
+
+      rewards_table rewards(get_self(),  get_self().value );
+      auto itr = rewards.find( owner.value );
+      if ( itr != rewards.end() ) {
+         const auto min = asset(10000, core_symbol());
+         char szTip[128];
+         sprintf(szTip, "claim rewards balance must >= %s", min.to_string().c_str());
+         check( itr->balance >= min, szTip );
+         
+         token::transfer_action fromsaving_act{ token_account, { {saving_account, active_permission} } };
+         fromsaving_act.send(saving_account, itr->owner, itr->balance, "claim rewards" );
+         print(name{itr->owner}, " claim rewards ", itr->balance, "\n");
+         
+         rewards.modify( itr, owner, [&](auto& r) {
+               r.balance = asset( 0, core_symbol() );
+               print("update ",name{owner}, " rewards zero, banlace=",r.balance, "\n");
+            });
+
+      } else {
+         print("none claim rewards in ",name{owner}, "\n");
+      }
+      #endif // !RESOURCE_UNLIMIT
+
+      #ifndef RESOURCE_UNLIMIT
+
       require_auth( owner );
 
       const auto& prod = _producers.get( owner.value );
@@ -186,6 +263,8 @@ namespace eosiosystem {
          token::transfer_action transfer_act{ token_account, { {vpay_account, active_permission}, {owner, active_permission} } };
          transfer_act.send( vpay_account, owner, asset(producer_per_vote_pay, core_symbol()), "producer vote pay" );
       }
+
+      #endif // !RESOURCE_UNLIMIT
    }
 
-} //namespace eosiosystem
+} //namespace XST_SYSTEM

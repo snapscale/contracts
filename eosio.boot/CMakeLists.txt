@@ -2,7 +2,8 @@ add_contract(eosio.boot eosio.boot ${CMAKE_CURRENT_SOURCE_DIR}/src/eosio.boot.cp
 
 target_include_directories(eosio.boot
    PUBLIC
-   ${CMAKE_CURRENT_SOURCE_DIR}/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(eosio.boot
    PROPERTIES

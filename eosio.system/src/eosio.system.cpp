@@ -1,15 +1,16 @@
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
+#include XST_HEAD_TOKEN
 
-#include <eosio/crypto.hpp>
-#include <eosio/dispatcher.hpp>
+#include XST_HEAD_CRYPTO
+#include XST_HEAD_DISPATCHER
 
 #include <cmath>
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::current_time_point;
-   using eosio::token;
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::token;
 
    double get_continuous_rate(int64_t annual_rate) {
       return std::log1p(double(annual_rate)/double(100*inflation_precision));
@@ -23,7 +24,9 @@ namespace eosiosystem {
     _global(get_self(), get_self().value),
     _global2(get_self(), get_self().value),
     _global3(get_self(), get_self().value),
-    _global4(get_self(), get_self().value),
+    _global4(get_self(), get_self().value)
+#ifndef RESOURCE_UNLIMIT
+   ,
     _rammarket(get_self(), get_self().value),
     _rexpool(get_self(), get_self().value),
     _rexretpool(get_self(), get_self().value),
@@ -31,6 +34,7 @@ namespace eosiosystem {
     _rexfunds(get_self(), get_self().value),
     _rexbalance(get_self(), get_self().value),
     _rexorders(get_self(), get_self().value)
+#endif // !RESOURCE_UNLIMIT
    {
       _gstate  = _global.exists() ? _global.get() : get_default_parameters();
       _gstate2 = _global2.exists() ? _global2.get() : eosio_global_state2{};
@@ -53,8 +57,12 @@ namespace eosiosystem {
    }
 
    symbol system_contract::core_symbol()const {
+#ifndef RESOURCE_UNLIMIT
       const static auto sym = get_core_symbol( _rammarket );
       return sym;
+#else
+      return get_core_symbol();
+#endif // !RESOURCE_UNLIMIT
    }
 
    system_contract::~system_contract() {
@@ -71,6 +79,7 @@ namespace eosiosystem {
       check( max_ram_size < 1024ll*1024*1024*1024*1024, "ram size is unrealistic" );
       check( max_ram_size > _gstate.total_ram_bytes_reserved, "attempt to set max below reserved" );
 
+#ifndef RESOURCE_UNLIMIT
       auto delta = int64_t(max_ram_size) - int64_t(_gstate.max_ram_size);
       auto itr = _rammarket.find(ramcore_symbol.raw());
 
@@ -80,25 +89,29 @@ namespace eosiosystem {
       _rammarket.modify( itr, same_payer, [&]( auto& m ) {
          m.base.balance.amount += delta;
       });
+#endif // !RESOURCE_UNLIMIT
 
       _gstate.max_ram_size = max_ram_size;
    }
 
    void system_contract::update_ram_supply() {
-      auto cbt = eosio::current_block_time();
+      auto cbt = XST_FLAG::current_block_time();
 
       if( cbt <= _gstate2.last_ram_increase ) return;
-
+#ifndef RESOURCE_UNLIMIT
       auto itr = _rammarket.find(ramcore_symbol.raw());
+#endif // !RESOURCE_UNLIMIT
       auto new_ram = (cbt.slot - _gstate2.last_ram_increase.slot)*_gstate2.new_ram_per_block;
       _gstate.max_ram_size += new_ram;
 
+#ifndef RESOURCE_UNLIMIT
       /**
        *  Increase the amount of ram for sale based upon the change in max ram size.
        */
       _rammarket.modify( itr, same_payer, [&]( auto& m ) {
          m.base.balance.amount += new_ram;
       });
+#endif // !RESOURCE_UNLIMIT
       _gstate2.last_ram_increase = cbt;
    }
 
@@ -109,9 +122,9 @@ namespace eosiosystem {
       _gstate2.new_ram_per_block = bytes_per_block;
    }
 
-   void system_contract::setparams( const eosio::blockchain_parameters& params ) {
+   void system_contract::setparams( const XST_FLAG::blockchain_parameters& params ) {
       require_auth( get_self() );
-      (eosio::blockchain_parameters&)(_gstate) = params;
+      (XST_FLAG::blockchain_parameters&)(_gstate) = params;
       check( 3 <= _gstate.max_authority_depth, "max_authority_depth should be at least 3" );
       set_blockchain_parameters( params );
    }
@@ -122,6 +135,8 @@ namespace eosiosystem {
    }
 
    void system_contract::setalimits( const name& account, int64_t ram, int64_t net, int64_t cpu ) {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( get_self() );
 
       user_resources_table userres( get_self(), account.value );
@@ -137,9 +152,13 @@ namespace eosiosystem {
       }
 
       set_resource_limits( account, ram, net, cpu );
+
+#endif // !RESOURCE_UNLIMIT
    }
 
    void system_contract::setacctram( const name& account, const std::optional<int64_t>& ram_bytes ) {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( get_self() );
 
       int64_t current_ram, current_net, current_cpu;
@@ -182,9 +201,13 @@ namespace eosiosystem {
       }
 
       set_resource_limits( account, ram, current_net, current_cpu );
+
+#endif // !RESOURCE_UNLIMIT
    }
 
    void system_contract::setacctnet( const name& account, const std::optional<int64_t>& net_weight ) {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( get_self() );
 
       int64_t current_ram, current_net, current_cpu;
@@ -226,9 +249,13 @@ namespace eosiosystem {
       }
 
       set_resource_limits( account, current_ram, net, current_cpu );
+
+#endif // !RESOURCE_UNLIMIT
    }
 
    void system_contract::setacctcpu( const name& account, const std::optional<int64_t>& cpu_weight ) {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( get_self() );
 
       int64_t current_ram, current_net, current_cpu;
@@ -270,9 +297,22 @@ namespace eosiosystem {
       }
 
       set_resource_limits( account, current_ram, current_net, cpu );
+
+#endif // !RESOURCE_UNLIMIT
    }
 
-   void system_contract::activate( const eosio::checksum256& feature_digest ) {
+    void system_contract::setgasprice( const name& account, const std::optional<int64_t>& gas_price ) {
+
+      require_auth( get_self() );
+   
+      check( *gas_price >= 0, "invalid value for gas_price" );
+      print( "-----setgasprice-----", name{account}, "-----gas_price:", *gas_price ); //log level: debug
+
+      set_gas_price( account, *gas_price );
+
+   }
+
+   void system_contract::activate( const XST_FLAG::checksum256& feature_digest ) {
       require_auth( get_self() );
       preactivate_feature( feature_digest );
    }
@@ -334,14 +374,14 @@ namespace eosiosystem {
          }
          if( has_dot ) { // or is less than 12 characters
             auto suffix = newact.suffix();
-            if( suffix == newact ) {
+            if( suffix == newact ) { //less than 12 characters
                name_bid_table bids(get_self(), get_self().value);
                auto current = bids.find( newact.value );
                check( current != bids.end(), "no active bid for name" );
                check( current->high_bidder == creator, "only highest bidder can claim" );
                check( current->high_bid < 0, "auction for name is not closed yet" );
                bids.erase( current );
-            } else {
+            } else { // have suffix
                check( creator == suffix, "only suffix may create this account" );
             }
          }
@@ -351,24 +391,33 @@ namespace eosiosystem {
 
       userres.emplace( newact, [&]( auto& res ) {
         res.owner = newact;
+#ifndef RESOURCE_UNLIMIT
         res.net_weight = asset( 0, system_contract::get_core_symbol() );
         res.cpu_weight = asset( 0, system_contract::get_core_symbol() );
+#else
+        res.total_stake_weight = asset( 0, system_contract::get_core_symbol() );
+#endif // !RESOURCE_UNLIMIT
       });
 
+      #ifndef RESOURCE_UNLIMIT
       set_resource_limits( newact, 0, 0, 0 );
+      #else
+      set_resource_limits( newact, -1, -1, -1 );
+      // set_gas_price( newact, 1 ); // default is GAS_PRICE_MIN
+      #endif // !RESOURCE_UNLIMIT
    }
 
    void native::setabi( const name& acnt, const std::vector<char>& abi ) {
-      eosio::multi_index< "abihash"_n, abi_hash >  table(get_self(), get_self().value);
+      XST_FLAG::multi_index< "abihash"_n, abi_hash >  table(get_self(), get_self().value);
       auto itr = table.find( acnt.value );
       if( itr == table.end() ) {
          table.emplace( acnt, [&]( auto& row ) {
             row.owner = acnt;
-            row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
+            row.hash = XST_FLAG::sha256(const_cast<char*>(abi.data()), abi.size());
          });
       } else {
          table.modify( itr, same_payer, [&]( auto& row ) {
-            row.hash = eosio::sha256(const_cast<char*>(abi.data()), abi.size());
+            row.hash = XST_FLAG::sha256(const_cast<char*>(abi.data()), abi.size());
          });
       }
    }
@@ -376,14 +425,15 @@ namespace eosiosystem {
    void system_contract::init( unsigned_int version, const symbol& core ) {
       require_auth( get_self() );
       check( version.value == 0, "unsupported version for init action" );
-
+#ifndef RESOURCE_UNLIMIT
       auto itr = _rammarket.find(ramcore_symbol.raw());
       check( itr == _rammarket.end(), "system contract has already been initialized" );
-
-      auto system_token_supply   = eosio::token::get_supply(token_account, core.code() );
+#endif // !RESOURCE_UNLIMIT
+      auto system_token_supply   = XST_FLAG::token::get_supply(token_account, core.code() );
       check( system_token_supply.symbol == core, "specified core symbol does not exist (precision mismatch)" );
 
       check( system_token_supply.amount > 0, "system token supply must be greater than 0" );
+#ifndef RESOURCE_UNLIMIT
       _rammarket.emplace( get_self(), [&]( auto& m ) {
          m.supply.amount = 100000000000000ll;
          m.supply.symbol = ramcore_symbol;
@@ -395,6 +445,7 @@ namespace eosiosystem {
 
       token::open_action open_act{ token_account, { {get_self(), active_permission} } };
       open_act.send( rex_account, core, get_self() );
+#endif // !RESOURCE_UNLIMIT
    }
 
-} /// eosio.system
+} /// XST_FLAG.system

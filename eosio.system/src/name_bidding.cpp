@@ -1,12 +1,13 @@
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
+#include XST_HEAD_TOKEN
 
-#include <eosio/transaction.hpp>
+#include XST_HEAD_TRANSACTION
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::current_time_point;
-   using eosio::token;
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::token;
 
    void system_contract::bidname( const name& bidder, const name& newname, const asset& bid ) {
       require_auth( bidder );
@@ -49,14 +50,14 @@ namespace eosiosystem {
                });
          }
 
-         eosio::transaction t;
+         XST_FLAG::transaction t;
          t.actions.emplace_back( permission_level{current->high_bidder, active_permission},
                                  get_self(), "bidrefund"_n,
                                  std::make_tuple( current->high_bidder, newname )
          );
          t.delay_sec = 0;
          uint128_t deferred_id = (uint128_t(newname.value) << 64) | current->high_bidder.value;
-         eosio::cancel_deferred( deferred_id );
+         XST_FLAG::cancel_deferred( deferred_id );
          t.send( deferred_id, bidder );
 
          bids.modify( current, bidder, [&]( auto& b ) {

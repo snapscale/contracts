@@ -1,23 +1,23 @@
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_ASSET
 
-#include <eosio/asset.hpp>
-#include <eosio/eosio.hpp>
 
 #include <string>
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
    class system_contract;
 }
 
-namespace eosio {
+namespace XST_FLAG {
 
    using std::string;
 
    /**
-    * eosio.token contract defines the structures and actions that allow users to create, issue, and manage
+    * XST_FLAG.token contract defines the structures and actions that allow users to create, issue, and manage
     * tokens on EOSIO based blockchains.
     */
-   class [[eosio::contract("eosio.token")]] token : public contract {
+   class [[XST_FLAG::contract(XST_NAME_TOKEN)]] token : public contract {
       public:
          using contract::contract;
 
@@ -32,7 +32,7 @@ namespace eosio {
           * @pre maximum_supply has to be smaller than the maximum supply allowed by the system: 1^62 - 1.
           * @pre Maximum supply must be positive;
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void create( const name&   issuer,
                       const asset&  maximum_supply);
          /**
@@ -42,7 +42,7 @@ namespace eosio {
           * @param quntity - the amount of tokens to be issued,
           * @memo - the memo string that accompanies the token issue transaction.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void issue( const name& to, const asset& quantity, const string& memo );
 
          /**
@@ -52,7 +52,7 @@ namespace eosio {
           * @param quantity - the quantity of tokens to retire,
           * @param memo - the memo string to accompany the transaction.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void retire( const asset& quantity, const string& memo );
 
          /**
@@ -64,7 +64,7 @@ namespace eosio {
           * @param quantity - the quantity of tokens to be transferred,
           * @param memo - the memo string to accompany the transaction.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void transfer( const name&    from,
                         const name&    to,
                         const asset&   quantity,
@@ -77,10 +77,10 @@ namespace eosio {
           * @param symbol - the token to be payed with by `ram_payer`,
           * @param ram_payer - the account that supports the cost of this action.
           *
-          * More information can be read [here](https://github.com/EOSIO/eosio.contracts/issues/62)
-          * and [here](https://github.com/EOSIO/eosio.contracts/issues/61).
+          * More information can be read [here](https://github.com/EOSIO/XST_FLAG.contracts/issues/62)
+          * and [here](https://github.com/EOSIO/XST_FLAG.contracts/issues/61).
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void open( const name& owner, const symbol& symbol, const name& ram_payer );
 
          /**
@@ -93,7 +93,7 @@ namespace eosio {
           * @pre The pair of owner plus symbol has to exist otherwise no action is executed,
           * @pre If the pair of owner plus symbol exists, the balance has to be zero.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void close( const name& owner, const symbol& symbol );
 
          static asset get_supply( const name& token_contract_account, const symbol_code& sym_code )
@@ -110,20 +110,20 @@ namespace eosio {
             return ac.balance;
          }
 
-         using create_action = eosio::action_wrapper<"create"_n, &token::create>;
-         using issue_action = eosio::action_wrapper<"issue"_n, &token::issue>;
-         using retire_action = eosio::action_wrapper<"retire"_n, &token::retire>;
-         using transfer_action = eosio::action_wrapper<"transfer"_n, &token::transfer>;
-         using open_action = eosio::action_wrapper<"open"_n, &token::open>;
-         using close_action = eosio::action_wrapper<"close"_n, &token::close>;
+         using create_action = XST_FLAG::action_wrapper<"create"_n, &token::create>;
+         using issue_action = XST_FLAG::action_wrapper<"issue"_n, &token::issue>;
+         using retire_action = XST_FLAG::action_wrapper<"retire"_n, &token::retire>;
+         using transfer_action = XST_FLAG::action_wrapper<"transfer"_n, &token::transfer>;
+         using open_action = XST_FLAG::action_wrapper<"open"_n, &token::open>;
+         using close_action = XST_FLAG::action_wrapper<"close"_n, &token::close>;
       private:
-         struct [[eosio::table]] account {
+         struct [[XST_FLAG::table]] account {
             asset    balance;
 
             uint64_t primary_key()const { return balance.symbol.code().raw(); }
          };
 
-         struct [[eosio::table]] currency_stats {
+         struct [[XST_FLAG::table]] currency_stats {
             asset    supply;
             asset    max_supply;
             name     issuer;
@@ -131,8 +131,8 @@ namespace eosio {
             uint64_t primary_key()const { return supply.symbol.code().raw(); }
          };
 
-         typedef eosio::multi_index< "accounts"_n, account > accounts;
-         typedef eosio::multi_index< "stat"_n, currency_stats > stats;
+         typedef XST_FLAG::multi_index< "accounts"_n, account > accounts;
+         typedef XST_FLAG::multi_index< "stat"_n, currency_stats > stats;
 
          void sub_balance( const name& owner, const asset& value );
          void add_balance( const name& owner, const asset& value, const name& ram_payer );

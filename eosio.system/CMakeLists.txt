@@ -11,7 +11,8 @@ add_contract(eosio.system eosio.system
 target_include_directories(eosio.system
    PUBLIC
    ${CMAKE_CURRENT_SOURCE_DIR}/include
-   ${CMAKE_CURRENT_SOURCE_DIR}/../eosio.token/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/../eosio.token/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(eosio.system
    PROPERTIES
@@ -21,7 +22,8 @@ add_contract(rex.results rex.results ${CMAKE_CURRENT_SOURCE_DIR}/src/rex.results
 
 target_include_directories(rex.results
    PUBLIC
-   ${CMAKE_CURRENT_SOURCE_DIR}/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(rex.results
    PROPERTIES

@@ -1,19 +1,19 @@
 #pragma once
-
+#include "typedef.hpp"
 #include <eosio/binary_extension.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/ignore.hpp>
-#include <eosio/transaction.hpp>
 
-namespace eosio {
+#include <eosio/ignore.hpp>
+#include XST_HEAD_TRANSACTION
+
+namespace XST_FLAG {
     
    /**
-    * @defgroup eosiomsig eosio.msig
+    * @defgroup eosiomsig XST_FLAG.msig
     * @ingroup eosiocontracts
-    * eosio.msig contract defines the structures and actions needed to manage the proposals and approvals on blockchain.
+    * XST_FLAG.msig contract defines the structures and actions needed to manage the proposals and approvals on blockchain.
     * @{
     */
-   class [[eosio::contract("eosio.msig")]] multisig : public contract {
+   class [[XST_FLAG::contract(XST_NAME_MSIG)]] multisig : public contract {
       public:
          using contract::contract;
 
@@ -33,7 +33,7 @@ namespace eosio {
           * @param requested - Permission levels expected to approve the proposal
           * @param trx - Proposed transaction
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void propose(ignore<name> proposer, ignore<name> proposal_name,
                ignore<std::vector<permission_level>> requested, ignore<transaction> trx);
          /**
@@ -48,9 +48,9 @@ namespace eosio {
           * @param level - Permission level approving the transaction
           * @param proposal_hash - Transaction's checksum
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void approve( name proposer, name proposal_name, permission_level level,
-                       const eosio::binary_extension<eosio::checksum256>& proposal_hash );
+                       const XST_FLAG::binary_extension<XST_FLAG::checksum256>& proposal_hash );
          /**
           * Unapprove action revokes an existing proposal. This action is the reverse of the `approve` action: if all validations pass
           * the `level` permission is erased from internal `provided_approvals` and added to the internal
@@ -60,7 +60,7 @@ namespace eosio {
           * @param proposal_name - The name of the proposal (should be an existing proposal)
           * @param level - Permission level revoking approval for proposal
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void unapprove( name proposer, name proposal_name, permission_level level );
          /**
           * Cancel action cancels an existing proposal.
@@ -73,7 +73,7 @@ namespace eosio {
           * only after time has expired on the proposed transaction. It removes corresponding entries from
           * internal proptable and from approval (or old approvals) tables as well.
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void cancel( name proposer, name proposal_name, name canceler );
          /**
           * Exec action allows an `executer` account to execute a proposal.
@@ -92,7 +92,7 @@ namespace eosio {
           * @param proposal_name - The name of the proposal (should be an existing proposal)
           * @param executer - The account executing the transaction
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void exec( name proposer, name proposal_name, name executer );
          /**
           * Invalidate action allows an `account` to invalidate itself, that is, its name is added to
@@ -100,41 +100,41 @@ namespace eosio {
           *
           * @param account - The account invalidating the transaction
           */
-         [[eosio::action]]
+         [[XST_FLAG::action]]
          void invalidate( name account );
 
-         using propose_action = eosio::action_wrapper<"propose"_n, &multisig::propose>;
-         using approve_action = eosio::action_wrapper<"approve"_n, &multisig::approve>;
-         using unapprove_action = eosio::action_wrapper<"unapprove"_n, &multisig::unapprove>;
-         using cancel_action = eosio::action_wrapper<"cancel"_n, &multisig::cancel>;
-         using exec_action = eosio::action_wrapper<"exec"_n, &multisig::exec>;
-         using invalidate_action = eosio::action_wrapper<"invalidate"_n, &multisig::invalidate>;
+         using propose_action = XST_FLAG::action_wrapper<"propose"_n, &multisig::propose>;
+         using approve_action = XST_FLAG::action_wrapper<"approve"_n, &multisig::approve>;
+         using unapprove_action = XST_FLAG::action_wrapper<"unapprove"_n, &multisig::unapprove>;
+         using cancel_action = XST_FLAG::action_wrapper<"cancel"_n, &multisig::cancel>;
+         using exec_action = XST_FLAG::action_wrapper<"exec"_n, &multisig::exec>;
+         using invalidate_action = XST_FLAG::action_wrapper<"invalidate"_n, &multisig::invalidate>;
 
       private:
-         struct [[eosio::table]] proposal {
+         struct [[XST_FLAG::table]] proposal {
             name                            proposal_name;
             std::vector<char>               packed_transaction;
 
             uint64_t primary_key()const { return proposal_name.value; }
          };
 
-         typedef eosio::multi_index< "proposal"_n, proposal > proposals;
+         typedef XST_FLAG::multi_index< "proposal"_n, proposal > proposals;
 
-         struct [[eosio::table]] old_approvals_info {
+         struct [[XST_FLAG::table]] old_approvals_info {
             name                            proposal_name;
             std::vector<permission_level>   requested_approvals;
             std::vector<permission_level>   provided_approvals;
 
             uint64_t primary_key()const { return proposal_name.value; }
          };
-         typedef eosio::multi_index< "approvals"_n, old_approvals_info > old_approvals;
+         typedef XST_FLAG::multi_index< "approvals"_n, old_approvals_info > old_approvals;
 
          struct approval {
             permission_level level;
             time_point       time;
          };
 
-         struct [[eosio::table]] approvals_info {
+         struct [[XST_FLAG::table]] approvals_info {
             uint8_t                 version = 1;
             name                    proposal_name;
             //requested approval doesn't need to cointain time, but we want requested approval
@@ -145,16 +145,16 @@ namespace eosio {
 
             uint64_t primary_key()const { return proposal_name.value; }
          };
-         typedef eosio::multi_index< "approvals2"_n, approvals_info > approvals;
+         typedef XST_FLAG::multi_index< "approvals2"_n, approvals_info > approvals;
 
-         struct [[eosio::table]] invalidation {
+         struct [[XST_FLAG::table]] invalidation {
             name         account;
             time_point   last_invalidation_time;
 
             uint64_t primary_key() const { return account.value; }
          };
 
-         typedef eosio::multi_index< "invals"_n, invalidation > invalidations;
+         typedef XST_FLAG::multi_index< "invals"_n, invalidation > invalidations;
    };
-   /** @}*/ // end of @defgroup eosiomsig eosio.msig
-} /// namespace eosio
+   /** @}*/ // end of @defgroup eosiomsig XST_FLAG.msig
+} /// namespace XST_FLAG

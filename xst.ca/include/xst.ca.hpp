@@ -1,144 +1,137 @@
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_ASSET
 
-#include <eosio/asset.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/crypto.hpp>
-#include <eosio/transaction.hpp>
+#include XST_HEAD_CRYPTO
+#include XST_HEAD_TRANSACTION
 #include <string>
 
-namespace eosiosystem {
+namespace XST_SYSTEM
+{
    class system_contract;
 }
 
-namespace eosio {
+namespace XST_FLAG
+{
 
    using std::string;
 
-   class [[eosio::contract("xst.ca")]] ca : public contract 
+   class [[XST_FLAG::contract("xst.ca")]] ca : public contract
    {
-      public:
-         using contract::contract;
+   public:
+      using contract::contract;
 
-         /**
-          * Add member action.
-          */
-         [[eosio::action]]
-         void addmem(std::string owner, public_key pk, std::string meminfo);
+      // /**
+      //  * Add member action.
+      //  */
+      // [[XST_FLAG::action]]
+      // void addmem(std::string owner, public_key pk, std::string meminfo);
 
-          /**
-          * Change member's status action，default->0, pass->1, reject->2
-          */
-         [[eosio::action]]
-         void changestatus( public_key pk, uint8_t status);
+      // /**
+      //     * Change member's status action，default->0, pass->1, reject->2
+      //     */
+      // [[XST_FLAG::action]] void changestatus(public_key pk, uint8_t status);
 
-         /**
-          * Add ca action.
-          */
-         [[eosio::action]]
-         void addcert(public_key pk, signature cert);
+      // /**
+      //     * Add ca action.
+      //     */
+      // [[XST_FLAG::action]] void addcert(public_key pk, signature cert);
 
-         /**
-          * Add crl action.
-          */
-         [[eosio::action]]
-         void addcrl(public_key pk);
+      // /**
+      //     * Del member action.
+      //     */
+      // [[XST_FLAG::action]] void delmem(public_key pk);
 
-         /**
-          * Del member action.
-          */
-         [[eosio::action]]
-         void delmem(public_key pk);
+      // /**
+      //     * Del all mem.
+      //     */
+      // [[XST_FLAG::action]] void delallmem();
 
-         /**
-          * Del crl action.
-          */
-         [[eosio::action]]
-         void delcrl(public_key pk);
-
-         /**
-          * Del all mem.
-          */
-         [[eosio::action]]
-         void delallmem();
-
-          /**
+      /**
           * Table global_id return to previous member id when delete one member.
           */
-         // [[eosio::action]]
-         // void prevmemid();
+      // [[XST_FLAG::action]]
+      // void prevmemid();
 
+      // static inline checksum256 getKeyHash(const public_key &pk)
+      // {
+      //    return sha256((const char *)&pk, 33);
+      // }
 
-         static inline checksum256 getKeyHash(const public_key &pk)
-         {
-            return sha256((const char *)&pk, 33);
-         }
+      /**
+          * Add crl action.
+          */
+      [[XST_FLAG::action]] void addcrl(checksum256 pk_hash);
 
-      private:
-         struct [[eosio::table]] member 
-         {
-            uint64_t id;
-            std::string owner;
-            public_key pk;
-            uint8_t status;
-            std::string  meminfo;
+      /**
+          * Del crl action.
+          */
+      [[XST_FLAG::action]] void delcrl(checksum256 pk_hash);
 
-            uint64_t primary_key() const { return id; }
-            checksum256 by_pk() const { return getKeyHash(pk); }
+   private:
+      // struct [[XST_FLAG::table]] member
+      // {
+      //    uint64_t id;
+      //    std::string owner;
+      //    public_key pk;
+      //    uint8_t status;
+      //    std::string meminfo;
 
-            EOSLIB_SERIALIZE( member, (id)(owner)(pk)(status)(meminfo) )
+      //    uint64_t primary_key() const { return id; }
+      //    checksum256 by_pk() const { return getKeyHash(pk); }
 
-         };
+      //    XSTLIB_SERIALIZE(member, (id)(owner)(pk)(status)(meminfo))
+      // };
 
-         struct [[eosio::table]] certinfo {
-            uint64_t id;
-            public_key pk;
-            signature cert;
+      // struct [[XST_FLAG::table]] certinfo
+      // {
+      //    uint64_t id;
+      //    public_key pk;
+      //    signature cert;
 
-            uint64_t primary_key() const { return id; }
-            checksum256 by_pk() const { return getKeyHash(pk); }
+      //    uint64_t primary_key() const { return id; }
+      //    checksum256 by_pk() const { return getKeyHash(pk); }
 
-            EOSLIB_SERIALIZE( certinfo, (id)(pk)(cert) )
+      //    XSTLIB_SERIALIZE(certinfo, (id)(pk)(cert))
+      // };
 
-         };
+      // typedef XST_FLAG::multi_index<"members"_n, member,
+      //                               indexed_by<"bypk"_n, const_mem_fun<member, checksum256, &member::by_pk>>>
+      //     members;
+      // typedef XST_FLAG::multi_index<"certs"_n,
+      //                               certinfo,
+      //                               indexed_by<"bypk"_n, const_mem_fun<certinfo, checksum256, &certinfo::by_pk>>>
+      //     certs;
 
-         struct [[eosio::table]] crl {
-            uint64_t id;
-            public_key pk;
-            // signature cert;
-
-            uint64_t primary_key() const { return id; }
-            checksum256 by_pk() const { return getKeyHash(pk); }
-
-            EOSLIB_SERIALIZE( crl, (id)(pk) )
-
-         };
-
-      struct [[eosio::table]] global_id
+      struct [[XST_FLAG::table]] crl
       {
-         uint64_t    id;
-         uint64_t    next_id;
+         uint64_t id;
+         checksum256 pk_hash;
+         // signature cert;
+
+         uint64_t primary_key() const { return id; }
+         checksum256 by_pk() const { return pk_hash; }
+
+         XSTLIB_SERIALIZE(crl, (id)(pk_hash))
+      };
+
+      struct [[XST_FLAG::table]] global_id
+      {
+         uint64_t id;
+         uint64_t next_id;
 
          uint64_t primary_key() const { return id; }
       };
 
-    
-         typedef eosio::multi_index<"members"_n, member,
-                                    indexed_by<"bypk"_n, const_mem_fun<member, checksum256, &member::by_pk>> 
-                                    > members;
-         typedef eosio::multi_index<"certs"_n, 
-                                    certinfo,
-                                    indexed_by<"bypk"_n, const_mem_fun<certinfo, checksum256, &certinfo::by_pk>> 
-                                    > certs;
-         typedef eosio::multi_index<"crls"_n, 
+      typedef XST_FLAG::multi_index<"crls"_n,
                                     crl,
-                                    indexed_by<"bypk"_n, const_mem_fun<crl, checksum256, &crl::by_pk>> 
-                                    > crls;
-           typedef eosio::multi_index<"globalid"_n, global_id> global_ids;
+                                    indexed_by<"bypk"_n, const_mem_fun<crl, checksum256, &crl::by_pk>>>
+          crls;
+      typedef XST_FLAG::multi_index<"globalid"_n, global_id> global_ids;
 
-         /**
+      /**
           * Get table next  id, 0->members, 1->certs, 2->crls .
           */
-           uint64_t nextid(uint8_t type);
-
+      uint64_t nextid(uint8_t type);
    };
-} /// namespace eosio
+} // namespace XST_FLAG

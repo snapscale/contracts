@@ -1,37 +1,43 @@
-#include <eosio/datastream.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/multi_index.hpp>
-#include <eosio/privileged.hpp>
-#include <eosio/serialize.hpp>
-#include <eosio/transaction.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
+#include XST_HEAD_TOKEN
 
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
+#include <eosio/datastream.hpp>
+
+#include <eosio/multi_index.hpp>
+#include XST_HEAD_PRIVILEGED
+#include <eosio/serialize.hpp>
+#include XST_HEAD_TRANSACTION
+
 
 #include "name_bidding.cpp"
-// Unfortunately, this is needed until CDT fixes the duplicate symbol error with eosio::send_deferred
+// Unfortunately, this is needed until CDT fixes the duplicate symbol error with XST_FLAG::send_deferred
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::asset;
-   using eosio::const_mem_fun;
-   using eosio::current_time_point;
-   using eosio::indexed_by;
-   using eosio::permission_level;
-   using eosio::seconds;
-   using eosio::time_point_sec;
-   using eosio::token;
+   using XST_FLAG::asset;
+   using XST_FLAG::const_mem_fun;
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::indexed_by;
+   using XST_FLAG::permission_level;
+   using XST_FLAG::seconds;
+   using XST_FLAG::time_point_sec;
+   using XST_FLAG::token;
 
    /**
     *  This action will buy an exact amount of ram and bill the payer the current market price.
     */
    void system_contract::buyrambytes( const name& payer, const name& receiver, uint32_t bytes ) {
+#ifndef RESOURCE_UNLIMIT
+
       auto itr = _rammarket.find(ramcore_symbol.raw());
       const int64_t ram_reserve   = itr->base.balance.amount;
       const int64_t eos_reserve   = itr->quote.balance.amount;
       const int64_t cost          = exchange_state::get_bancor_input( ram_reserve, eos_reserve, bytes );
       const int64_t cost_plus_fee = cost / double(0.995);
       buyram( payer, receiver, asset{ cost_plus_fee, core_symbol() } );
+
+#endif // !RESOURCE_UNLIMIT
    }
 
 
@@ -45,6 +51,8 @@ namespace eosiosystem {
     */
    void system_contract::buyram( const name& payer, const name& receiver, const asset& quant )
    {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( payer );
       update_ram_supply();
 
@@ -103,6 +111,8 @@ namespace eosiosystem {
          get_resource_limits( res_itr->owner, ram_bytes, net, cpu );
          set_resource_limits( res_itr->owner, res_itr->ram_bytes + ram_gift_bytes, net, cpu );
       }
+            
+#endif // !RESOURCE_UNLIMIT
    }
 
   /**
@@ -112,6 +122,8 @@ namespace eosiosystem {
     *  for RAM over time.
     */
    void system_contract::sellram( const name& account, int64_t bytes ) {
+#ifndef RESOURCE_UNLIMIT
+
       require_auth( account );
       update_ram_supply();
 
@@ -159,8 +171,11 @@ namespace eosiosystem {
          transfer_act.send( account, ramfee_account, asset(fee, core_symbol()), "sell ram fee" );
          channel_to_rex( ramfee_account, asset(fee, core_symbol() ));
       }
+
+#endif // !RESOURCE_UNLIMIT
    }
 
+#ifndef RESOURCE_UNLIMIT
    void validate_b1_vesting( int64_t stake ) {
       const int64_t base_time = 1527811200; /// 2018-06-01
       const int64_t max_claimable = 100'000'000'0000ll;
@@ -168,7 +183,9 @@ namespace eosiosystem {
 
       check( max_claimable - claimable <= stake, "b1 can only claim their tokens over 10 years" );
    }
+#endif // !RESOURCE_UNLIMIT
 
+#ifndef RESOURCE_UNLIMIT
    void system_contract::changebw( name from, const name& receiver,
                                    const asset& stake_net_delta, const asset& stake_cpu_delta, bool transfer )
    {
@@ -256,7 +273,7 @@ namespace eosiosystem {
       } // tot_itr can be invalid, should go out of scope
 
       // create refund or update from existing refund
-      if ( stake_account != source_stake_from ) { //for eosio both transfer and refund make no sense
+      if ( stake_account != source_stake_from ) { //for XST_FLAG both transfer and refund make no sense
          refunds_table refunds_tbl( get_self(), from.value );
          auto req = refunds_tbl.find( from.value );
 
@@ -324,16 +341,16 @@ namespace eosiosystem {
          } /// end if is_delegating_to_self || is_undelegating
 
          if ( need_deferred_trx ) {
-            eosio::transaction out;
+            XST_FLAG::transaction out;
             out.actions.emplace_back( permission_level{from, active_permission},
                                       get_self(), "refund"_n,
                                       from
             );
             out.delay_sec = refund_delay_sec;
-            eosio::cancel_deferred( from.value ); // TODO: Remove this line when replacing deferred trxs is fixed
+            XST_FLAG::cancel_deferred( from.value ); // TODO: Remove this line when replacing deferred trxs is fixed
             out.send( from.value, from, true );
          } else {
-            eosio::cancel_deferred( from.value );
+            XST_FLAG::cancel_deferred( from.value );
          }
 
          auto transfer_amount = net_balance + cpu_balance;
@@ -346,6 +363,151 @@ namespace eosiosystem {
       vote_stake_updater( from );
       update_voting_power( from, stake_net_delta + stake_cpu_delta );
    }
+#else
+   void system_contract::changebw( name from, const name& receiver,
+                                   const asset& stake_delta, bool transfer )
+   {
+      require_auth( from );
+      check( stake_delta.amount != 0, "should stake non-zero amount" );
+
+      name source_stake_from = from;
+      if ( transfer ) {
+         from = receiver;
+      }
+
+      // update stake delegated from "from" to "receiver"
+      {
+         del_bandwidth_table     del_tbl( get_self(), from.value );
+         auto itr = del_tbl.find( receiver.value );
+         if( itr == del_tbl.end() ) {
+            itr = del_tbl.emplace( from, [&]( auto& dbo ){
+                  dbo.from          = from;
+                  dbo.to            = receiver;
+                  dbo.stake_weight    = stake_delta;
+               });
+         }
+         else {
+            del_tbl.modify( itr, same_payer, [&]( auto& dbo ){
+                  dbo.stake_weight  += stake_delta;
+               });
+         }
+         check( 0 <= itr->stake_weight.amount, "insufficient staked token" );
+         if ( itr->is_empty() ) {
+            del_tbl.erase( itr );
+         }
+      } // itr can be invalid, should go out of scope
+
+      // update totals of "receiver"
+      {
+         user_resources_table   totals_tbl( get_self(), receiver.value );
+         auto tot_itr = totals_tbl.find( receiver.value );
+         if( tot_itr ==  totals_tbl.end() ) {
+            tot_itr = totals_tbl.emplace( from, [&]( auto& tot ) {
+                  tot.owner = receiver;
+                  tot.total_stake_weight    = stake_delta;
+               });
+         } else {
+            totals_tbl.modify( tot_itr, from == receiver ? from : same_payer, [&]( auto& tot ) {
+                  tot.total_stake_weight    += stake_delta;
+               });
+         }
+         check( 0 <= tot_itr->total_stake_weight.amount, "insufficient staked total token" );
+
+         // {
+         //    bool ram_managed = false;
+         //    bool net_managed = false;
+         //    bool cpu_managed = false;
+
+         //    auto voter_itr = _voters.find( receiver.value );
+         //    if( voter_itr != _voters.end() ) {
+         //       ram_managed = has_field( voter_itr->flags1, voter_info::flags1_fields::ram_managed );
+         //       net_managed = has_field( voter_itr->flags1, voter_info::flags1_fields::net_managed );
+         //       cpu_managed = has_field( voter_itr->flags1, voter_info::flags1_fields::cpu_managed );
+         //    }
+
+         if ( tot_itr->is_empty() ) {
+            totals_tbl.erase( tot_itr );
+         }
+      } // tot_itr can be invalid, should go out of scope
+
+      // create refund or update from existing refund
+      if ( stake_account != source_stake_from ) { //for XST_FLAG both transfer and refund make no sense
+         refunds_table refunds_tbl( get_self(), from.value );
+         auto req = refunds_tbl.find( from.value );
+
+         //create/update/delete refund
+         auto balance = stake_delta;
+         bool need_deferred_trx = false;
+
+
+         // net and cpu are same sign by assertions in delegatebw and undelegatebw
+         // redundant assertion also at start of changebw to protect against misuse of changebw
+         bool is_undelegating = balance.amount < 0;
+         bool is_delegating_to_self = (!transfer && from == receiver);
+
+         if( is_delegating_to_self || is_undelegating ) {
+            if ( req != refunds_tbl.end() ) { //need to update refund
+               refunds_tbl.modify( req, same_payer, [&]( refund_request& r ) {
+                  if ( balance.amount < 0 ) {
+                     r.request_time = current_time_point();
+                  }
+                  r.stake_amount -= balance;
+                  if ( r.stake_amount.amount < 0 ) {
+                     balance = -r.stake_amount;
+                     r.stake_amount.amount = 0;
+                  } else {
+                     balance.amount = 0;
+                  }
+               });
+
+               check( 0 <= req->stake_amount.amount, "negative refund amount" ); //should never happen
+
+               if ( req->is_empty() ) {
+                  refunds_tbl.erase( req );
+                  need_deferred_trx = false;
+               } else {
+                  need_deferred_trx = true;
+               }
+            } else if ( balance.amount < 0 ) { //need to create refund
+               refunds_tbl.emplace( from, [&]( refund_request& r ) {
+                  r.owner = from;
+                  if ( balance.amount < 0 ) {
+                     r.stake_amount = -balance;
+                     balance.amount = 0;
+                  } else {
+                     r.stake_amount = asset( 0, core_symbol() );
+                  }
+                  r.request_time = current_time_point();
+               });
+               need_deferred_trx = true;
+            } // else stake increase requested with no existing row in refunds_tbl -> nothing to do with refunds_tbl
+         } /// end if is_delegating_to_self || is_undelegating
+
+         if ( need_deferred_trx ) {
+            XST_FLAG::transaction out;
+            out.actions.emplace_back( permission_level{from, active_permission},
+                                      get_self(), "refund"_n,
+                                      from
+            );
+            out.delay_sec = refund_delay_sec;
+            XST_FLAG::cancel_deferred( from.value ); // TODO: Remove this line when replacing deferred trxs is fixed
+            out.send( from.value, from, true );
+         } else {
+            XST_FLAG::cancel_deferred( from.value );
+         }
+
+         auto transfer_amount = balance;
+         if ( 0 < transfer_amount.amount ) {
+            token::transfer_action transfer_act{ token_account, { {source_stake_from, active_permission} } };
+            transfer_act.send( source_stake_from, stake_account, asset(transfer_amount), "stake bandwidth" );
+         }
+      }
+
+      // vote_stake_updater( from );
+      update_voting_power( from, stake_delta );
+
+   }
+#endif // !RESOURCE_UNLIMIT
 
    void system_contract::update_voting_power( const name& voter, const asset& total_update )
    {
@@ -362,16 +524,17 @@ namespace eosiosystem {
       }
 
       check( 0 <= voter_itr->staked, "stake for voting cannot be negative" );
-
+#ifndef RESOURCE_UNLIMIT
       if( voter == "b1"_n ) {
          validate_b1_vesting( voter_itr->staked );
       }
-
+#endif // !RESOURCE_UNLIMIT
       if( voter_itr->producers.size() || voter_itr->proxy ) {
          update_votes( voter, voter_itr->proxy, voter_itr->producers, false );
       }
    }
 
+#ifndef RESOURCE_UNLIMIT
    void system_contract::delegatebw( const name& from, const name& receiver,
                                      const asset& stake_net_quantity,
                                      const asset& stake_cpu_quantity, bool transfer )
@@ -384,7 +547,21 @@ namespace eosiosystem {
 
       changebw( from, receiver, stake_net_quantity, stake_cpu_quantity, transfer);
    } // delegatebw
+#else
+   void system_contract::delegatebw( const name& from, const name& receiver,
+                                     const asset& stake_quantity, bool transfer )
+   {
+      asset zero_asset( 0, core_symbol() );
+      check( stake_quantity >= zero_asset, "must stake a positive amount" );
+      check( stake_quantity.amount > 0, "must stake a positive amount" );
+      check( !transfer || from != receiver, "cannot use transfer flag if delegating to self" );
 
+      changebw( from, receiver, stake_quantity, transfer);
+
+   } // delegatebw
+#endif // !RESOURCE_UNLIMIT
+
+#ifndef RESOURCE_UNLIMIT
    void system_contract::undelegatebw( const name& from, const name& receiver,
                                        const asset& unstake_net_quantity, const asset& unstake_cpu_quantity )
    {
@@ -397,7 +574,19 @@ namespace eosiosystem {
 
       changebw( from, receiver, -unstake_net_quantity, -unstake_cpu_quantity, false);
    } // undelegatebw
+#else
+   void system_contract::undelegatebw( const name& from, const name& receiver,
+                                       const asset& unstake_quantity )
+   {
+      asset zero_asset( 0, core_symbol() );
+      check( unstake_quantity >= zero_asset, "must unstake a positive amount" );
+      check( unstake_quantity.amount > 0, "must unstake a positive amount" );
+      check( _gstate.thresh_activated_stake_time != time_point(),
+             "cannot undelegate bandwidth until the chain is activated (at least 15% of all tokens participate in voting)" );
 
+      changebw( from, receiver, -(unstake_quantity), false);
+   } // undelegatebw
+#endif // !RESOURCE_UNLIMIT
 
    void system_contract::refund( const name& owner ) {
       require_auth( owner );
@@ -408,9 +597,13 @@ namespace eosiosystem {
       check( req->request_time + seconds(refund_delay_sec) <= current_time_point(),
              "refund is not available yet" );
       token::transfer_action transfer_act{ token_account, { {stake_account, active_permission}, {req->owner, active_permission} } };
+#ifndef RESOURCE_UNLIMIT
       transfer_act.send( stake_account, req->owner, req->net_amount + req->cpu_amount, "unstake" );
+#else
+      transfer_act.send( stake_account, req->owner, req->stake_amount, "unstake" );
+#endif // !RESOURCE_UNLIMIT
       refunds_tbl.erase( req );
    }
 
 
-} //namespace eosiosystem
+} //namespace XST_SYSTEM

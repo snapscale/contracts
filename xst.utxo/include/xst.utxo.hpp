@@ -1,57 +1,53 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
 #pragma once
+#include "typedef.hpp"
+#include XST_HEAD_ASSET
 
-#include <eosio/asset.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/crypto.hpp>
-#include <eosio/transaction.hpp>
+#include XST_HEAD_CRYPTO
+#include XST_HEAD_TRANSACTION
 #include <string>
 
-namespace eosiosystem
+namespace XST_SYSTEM
 {
 class system_contract;
 }
 
-namespace eosio
+namespace XST_FLAG
 {
 
 using std::string;
 
-const eosio::symbol TOKEN_SYMBOL = symbol(symbol_code("UTXO"), 4);
+const XST_FLAG::symbol TOKEN_SYMBOL = symbol(symbol_code("UTXO"), 4);
 
-class[[eosio::contract("xst.utxo")]] token : public contract
+class[[XST_FLAG::contract("xst.utxo")]] token : public contract
 {
  public:
    using contract::contract;
 
-   [[eosio::action]] void create(name issuer,
+   [[XST_FLAG::action]] void create(name issuer,
                                  asset maximum_supply);
 
-   [[eosio::action]] void update(name issuer,
+   [[XST_FLAG::action]] void update(name issuer,
                    asset maximum_supply);
 
-   [[eosio::action]] void issue(name to, asset quantity, string memo);
+   [[XST_FLAG::action]] void issue(name to, asset quantity, string memo);
 
-   [[eosio::action]] void retire(asset quantity, string memo);
+   [[XST_FLAG::action]] void retire(asset quantity, string memo);
 
-   [[eosio::action]] void transfer(name from,
+   [[XST_FLAG::action]] void transfer(name from,
                                    name to,
                                    asset quantity,
                                    string memo);
 
-   [[eosio::action]] void claim(name owner, symbol_code sym);
-   [[eosio::action]] void recover(name owner, symbol_code sym);
-   [[eosio::action]] void open(name owner, const symbol &symbol, name ram_payer);
-   [[eosio::action]] void close(name owner, const symbol &symbol);
+   [[XST_FLAG::action]] void claim(name owner, symbol_code sym);
+   [[XST_FLAG::action]] void recover(name owner, symbol_code sym);
+   [[XST_FLAG::action]] void open(name owner, const symbol &symbol, name ram_payer);
+   [[XST_FLAG::action]] void close(name owner, const symbol &symbol);
 
    struct input {
       uint64_t id;
       signature sig;
 
-      EOSLIB_SERIALIZE( input, (id)(sig) )
+      XSTLIB_SERIALIZE( input, (id)(sig) )
    };
 
    struct output {
@@ -59,11 +55,11 @@ class[[eosio::contract("xst.utxo")]] token : public contract
       name account;
       asset quantity;
 
-      EOSLIB_SERIALIZE( output, (pk)(account)(quantity) )
+      XSTLIB_SERIALIZE( output, (pk)(account)(quantity) )
    };
 
-   [[eosio::action]] void transferutxo(const name &payer, const std::vector<input> &inputs, const std::vector<output> &outputs, const string &memo);
-   [[eosio::action]] void loadutxo(const name &from, const public_key &pk, const asset &quantity);
+   [[XST_FLAG::action]] void transferutxo(const name &payer /*中间人*/, const std::vector<input> &inputs, const std::vector<output> &outputs, const string &memo);
+   [[XST_FLAG::action]] void loadutxo(const name &from, const public_key &pk, const asset &quantity);
 
    static asset get_supply(name token_contract_account, symbol_code sym_code)
    {
@@ -80,16 +76,16 @@ class[[eosio::contract("xst.utxo")]] token : public contract
    }
 
  private:
-   struct [[eosio::table]] account
+   struct [[XST_FLAG::table]] account
    {
       asset balance;
       bool claimed = false;
       uint64_t primary_key() const { return balance.symbol.code().raw(); }
 
-      EOSLIB_SERIALIZE( account, (balance)(claimed) )
+      XSTLIB_SERIALIZE( account, (balance)(claimed) )
    };
 
-   struct [[eosio::table]] currency_stats
+   struct [[XST_FLAG::table]] currency_stats
    {
       asset supply;
       asset max_supply;
@@ -97,10 +93,10 @@ class[[eosio::contract("xst.utxo")]] token : public contract
 
       uint64_t primary_key() const { return supply.symbol.code().raw(); }
 
-      EOSLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer) )
+      XSTLIB_SERIALIZE( currency_stats, (supply)(max_supply)(issuer) )
    };
 
-   struct [[eosio::table]] utxo
+   struct [[XST_FLAG::table]] utxo
    {
       uint64_t    id;
       public_key  pk;
@@ -109,26 +105,26 @@ class[[eosio::contract("xst.utxo")]] token : public contract
       uint64_t primary_key() const { return id; }
       checksum256 by_pk() const { return getKeyHash(pk); }
 
-      EOSLIB_SERIALIZE( utxo, (id)(pk)(amount) )
+      XSTLIB_SERIALIZE( utxo, (id)(pk)(amount) )
    };
 
-   struct [[eosio::table]] utxo_global
+   struct [[XST_FLAG::table]] utxo_global
    {
       uint64_t    id;
       uint64_t    next_pk;
 
       uint64_t primary_key() const { return id; }
 
-      EOSLIB_SERIALIZE( utxo_global, (id)(next_pk) )
+      XSTLIB_SERIALIZE( utxo_global, (id)(next_pk) )
    };
 
-   typedef eosio::multi_index<"accounts"_n, account> accounts;
-   typedef eosio::multi_index<"stat"_n, currency_stats> stats;
-   typedef eosio::multi_index<"utxos"_n, 
+   typedef XST_FLAG::multi_index<"accounts"_n, account> accounts;
+   typedef XST_FLAG::multi_index<"stat"_n, currency_stats> stats;
+   typedef XST_FLAG::multi_index<"utxos"_n, 
                               utxo,
                               indexed_by<"ipk"_n, const_mem_fun<utxo, checksum256, &utxo::by_pk>>
                               > utxos;
-   typedef eosio::multi_index<"utxoglobals"_n, utxo_global> utxo_globals;
+   typedef XST_FLAG::multi_index<"utxoglobals"_n, utxo_global> utxo_globals;
 
    static inline checksum256 getKeyHash(const public_key &pk)
    {
@@ -143,4 +139,4 @@ class[[eosio::contract("xst.utxo")]] token : public contract
    uint64_t getNextUTXOId();
 };
 
-} // namespace eosio
+} // namespace XST_FLAG

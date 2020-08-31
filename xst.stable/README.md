@@ -1,0 +1,2 @@
+# stablecoooin
+stable coin contract

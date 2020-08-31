@@ -1,11 +1,6 @@
-/**
- *  @file
- *  @copyright defined in eos/LICENSE.txt
- */
-
 #include <xst.utxo.hpp>
 
-namespace eosio
+namespace XST_FLAG
 {
 
 const uint32_t seconds_per_day = 24 * 3600;
@@ -271,7 +266,7 @@ void token::transferutxo(const name &payer, const std::vector<input> &inputs, co
    utxos utxostable(_self, _self.value);
    require_auth(payer);
 
-   auto p = pack(outputs);//Packaged into bytes, Pack is a function provided by eosio.cdt
+   auto p = pack(outputs);//Packaged into bytes, Pack is a function provided by XST_FLAG.cdt
    checksum256 outputsDigest = sha256(&p[0], p.size());
 
    asset inputSum = asset(0, TOKEN_SYMBOL);
@@ -366,6 +361,6 @@ uint64_t token::getNextUTXOId()
 }
 
 
-} // namespace eosio
+} // namespace XST_FLAG
 
-// EOSIO_DISPATCH(eosio::token, (create)(update)(issue)(transfer)(claim)(recover)(retire)(close)(transferutxo)(loadutxo))
+// XST_DISPATCH(XST_FLAG::token, (create)(update)(issue)(transfer)(claim)(recover)(retire)(close)(transferutxo)(loadutxo))

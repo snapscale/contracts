@@ -1,6 +1,7 @@
-#include <eosio.wrap/eosio.wrap.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_WRAP
 
-namespace eosio {
+namespace XST_FLAG {
 
 void wrap::exec( ignore<name>, ignore<transaction> ) {
    require_auth( get_self() );
@@ -13,4 +14,4 @@ void wrap::exec( ignore<name>, ignore<transaction> ) {
    send_deferred( (uint128_t(executer.value) << 64) | (uint64_t)current_time_point().time_since_epoch().count(), executer, _ds.pos(), _ds.remaining() );
 }
 
-} /// namespace eosio
+} /// namespace XST_FLAG

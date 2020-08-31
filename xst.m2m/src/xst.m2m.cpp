@@ -1,6 +1,6 @@
 #include <xst.m2m.hpp>
-// #include <eosio.token/eosio.token.hpp>
-#include "../../eosio.token/include/eosio.token/eosio.token.hpp"
+#include XST_HEAD_TOKEN
+// #include "../../XST_FLAG.token/include/XST_FLAG.token/XST_FLAG.token.hpp"
 
 //car 
 ACTION m2musecasexs::carauth(const name &car, const name &pile, const asset& quantity){
@@ -166,4 +166,4 @@ ACTION m2musecasexs::mgrclear() {
   carclear();
 }
 
-// EOSIO_DISPATCH(m2musecasexs, (carauth)(pilepersub)(settlement)(mgrclear))
+// XST_DISPATCH(m2musecasexs, (carauth)(pilepersub)(settlement)(mgrclear))

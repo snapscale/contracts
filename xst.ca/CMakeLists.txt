@@ -2,7 +2,9 @@ add_contract(xst.ca xst.ca ${CMAKE_CURRENT_SOURCE_DIR}/src/xst.ca.cpp)
 
 target_include_directories(xst.ca
    PUBLIC
-   ${CMAKE_CURRENT_SOURCE_DIR}/include)
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../eosio.token/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/../common/include)
 
 set_target_properties(xst.ca
    PROPERTIES

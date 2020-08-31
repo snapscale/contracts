@@ -1,0 +1,6 @@
+.DS_Store
+.idea/
+.vscode/
+*.wasm
+*.wast
+/*.wast.abi

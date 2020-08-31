@@ -79,7 +79,7 @@ $ cleos multisig review tester test -p treasury
     "delay_sec": 0,
     "context_free_actions": [],
     "actions": [{
-        "account": "eosio.token",
+        "account": XST_NAME_TOKEN,
         "name": "issue",
         "authorization": [{
             "actor": "treasury",

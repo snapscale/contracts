@@ -1,6 +1,7 @@
-#include <eosio.token/eosio.token.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_TOKEN
 
-namespace eosio {
+namespace XST_FLAG {
 
 void token::create( const name&   issuer,
                     const asset&  maximum_supply )
@@ -156,4 +157,4 @@ void token::close( const name& owner, const symbol& symbol )
    acnts.erase( it );
 }
 
-} /// namespace eosio
+} /// namespace XST_FLAG

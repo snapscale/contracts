@@ -1,14 +1,16 @@
-#include <eosio/crypto.hpp>
-#include <eosio/datastream.hpp>
-#include <eosio/eosio.hpp>
-#include <eosio/multi_index.hpp>
-#include <eosio/permission.hpp>
-#include <eosio/privileged.hpp>
-#include <eosio/serialize.hpp>
-#include <eosio/singleton.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
+#include XST_HEAD_TOKEN
 
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
+#include XST_HEAD_CRYPTO
+#include <eosio/datastream.hpp>
+
+#include <eosio/multi_index.hpp>
+#include XST_HEAD_PERMISSION
+#include XST_HEAD_PRIVILEGED
+#include <eosio/serialize.hpp>
+#include XST_HEAD_SINGLETON
+
 
 #include <type_traits>
 #include <limits>
@@ -16,19 +18,19 @@
 #include <algorithm>
 #include <cmath>
 
-namespace eosiosystem {
+namespace XST_SYSTEM {
 
-   using eosio::const_mem_fun;
-   using eosio::current_time_point;
-   using eosio::indexed_by;
-   using eosio::microseconds;
-   using eosio::singleton;
+   using XST_FLAG::const_mem_fun;
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::indexed_by;
+   using XST_FLAG::microseconds;
+   using XST_FLAG::singleton;
 
-   void system_contract::register_producer( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
+   void system_contract::register_producer( const name& producer, const XST_FLAG::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
       auto prod = _producers.find( producer.value );
       const auto ct = current_time_point();
 
-      eosio::public_key producer_key{};
+      XST_FLAG::public_key producer_key{};
 
       std::visit( [&](auto&& auth ) {
          if( auth.keys.size() == 1 ) {
@@ -76,14 +78,14 @@ namespace eosiosystem {
 
    }
 
-   void system_contract::regproducer( const name& producer, const eosio::public_key& producer_key, const std::string& url, uint16_t location ) {
+   void system_contract::regproducer( const name& producer, const XST_FLAG::public_key& producer_key, const std::string& url, uint16_t location ) {
       require_auth( producer );
       check( url.size() < 512, "url too long" );
 
       register_producer( producer, convert_to_block_signing_authority( producer_key ), url, location );
    }
 
-   void system_contract::regproducer2( const name& producer, const eosio::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
+   void system_contract::regproducer2( const name& producer, const XST_FLAG::block_signing_authority& producer_authority, const std::string& url, uint16_t location ) {
       require_auth( producer );
       check( url.size() < 512, "url too long" );
 
@@ -108,13 +110,13 @@ namespace eosiosystem {
 
       auto idx = _producers.get_index<"prototalvote"_n>();
 
-      using value_type = std::pair<eosio::producer_authority, uint16_t>;
+      using value_type = std::pair<XST_FLAG::producer_authority, uint16_t>;
       std::vector< value_type > top_producers;
       top_producers.reserve(21);
 
       for( auto it = idx.cbegin(); it != idx.cend() && top_producers.size() < 21 && 0 < it->total_votes && it->active(); ++it ) {
          top_producers.emplace_back(
-            eosio::producer_authority{
+            XST_FLAG::producer_authority{
                .producer_name = it->owner,
                .authority     = it->get_producer_authority()
             },
@@ -131,7 +133,7 @@ namespace eosiosystem {
          // return lhs.second < rhs.second; // sort by location
       } );
 
-      std::vector<eosio::producer_authority> producers;
+      std::vector<XST_FLAG::producer_authority> producers;
 
       producers.reserve(top_producers.size());
       for( auto& item : top_producers )
@@ -201,12 +203,16 @@ namespace eosiosystem {
 
    void system_contract::voteproducer( const name& voter_name, const name& proxy, const std::vector<name>& producers ) {
       require_auth( voter_name );
+#ifndef RESOURCE_UNLIMIT
       vote_stake_updater( voter_name );
+#endif // !RESOURCE_UNLIMIT
       update_votes( voter_name, proxy, producers, true );
+#ifndef RESOURCE_UNLIMIT
       auto rex_itr = _rexbalance.find( voter_name.value );
       if( rex_itr != _rexbalance.end() && rex_itr->rex_balance.amount > 0 ) {
          check_voting_requirement( voter_name, "voter holding REX tokens must vote for at least 21 producers or for a proxy" );
       }
+#endif // !RESOURCE_UNLIMIT
    }
 
    void system_contract::update_votes( const name& voter_name, const name& proxy, const std::vector<name>& producers, bool voting ) {
@@ -412,4 +418,4 @@ namespace eosiosystem {
       );
    }
 
-} /// namespace eosiosystem
+} /// namespace XST_SYSTEM

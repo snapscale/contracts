@@ -1,12 +1,15 @@
-#include <eosio.system/eosio.system.hpp>
-#include <eosio.token/eosio.token.hpp>
-#include <eosio.system/rex.results.hpp>
+#include "typedef.hpp"
+#include XST_HEAD_SC_SYSTEM
 
-namespace eosiosystem {
+#ifndef RESOURCE_UNLIMIT
+#include XST_HEAD_TOKEN
+#include XST_HEAD_SC_REX
 
-   using eosio::current_time_point;
-   using eosio::token;
-   using eosio::seconds;
+namespace XST_SYSTEM {
+
+   using XST_FLAG::current_time_point;
+   using XST_FLAG::token;
+   using XST_FLAG::seconds;
 
    void system_contract::deposit( const name& owner, const asset& amount )
    {
@@ -50,7 +53,7 @@ namespace eosiosystem {
       runrex(2);
       update_rex_account( from, asset( 0, core_symbol() ), delta_rex_stake );
       // dummy action added so that amount of REX tokens purchased shows up in action trace
-      rex_results::buyresult_action buyrex_act( rex_account, std::vector<eosio::permission_level>{ } );
+      rex_results::buyresult_action buyrex_act( rex_account, std::vector<XST_FLAG::permission_level>{ } );
       buyrex_act.send( rex_received );
    }
 
@@ -90,7 +93,7 @@ namespace eosiosystem {
       runrex(2);
       update_rex_account( owner, asset( 0, core_symbol() ), asset( 0, core_symbol() ), true );
       // dummy action added so that amount of REX tokens purchased shows up in action trace
-      rex_results::buyresult_action buyrex_act( rex_account, std::vector<eosio::permission_level>{ } );
+      rex_results::buyresult_action buyrex_act( rex_account, std::vector<XST_FLAG::permission_level>{ } );
       buyrex_act.send( rex_received );
    }
 
@@ -139,7 +142,7 @@ namespace eosiosystem {
       check( pending_sell_order.amount <= bitr->matured_rex, "insufficient funds for current and scheduled orders" );
       // dummy action added so that sell order proceeds show up in action trace
       if ( current_order.success ) {
-         rex_results::sellresult_action sellrex_act( rex_account, std::vector<eosio::permission_level>{ } );
+         rex_results::sellresult_action sellrex_act( rex_account, std::vector<XST_FLAG::permission_level>{ } );
          sellrex_act.send( current_order.proceeds );
       }
    }
@@ -231,7 +234,7 @@ namespace eosiosystem {
 
    void system_contract::setrex( const asset& balance )
    {
-      require_auth( "eosio"_n );
+      require_auth( XST_FLAG_N );
 
       check( balance.amount > 0, "balance must be set to have a positive amount" );
       check( balance.symbol == core_symbol(), "balance symbol must be core symbol" );
@@ -363,6 +366,8 @@ namespace eosiosystem {
     */
    void system_contract::update_resource_limits( const name& from, const name& receiver, int64_t delta_net, int64_t delta_cpu )
    {
+      #ifndef RESOURCE_UNLIMIT
+
       if ( delta_cpu == 0 && delta_net == 0 ) { // nothing to update
          return;
       }
@@ -409,6 +414,8 @@ namespace eosiosystem {
       if ( tot_itr->is_empty() ) {
          totals_tbl.erase( tot_itr );
       }
+
+      #endif // !RESOURCE_UNLIMIT
    }
 
    /**
@@ -497,7 +504,7 @@ namespace eosiosystem {
       int64_t delta_stake = rented_tokens - itr->total_staked.amount;
       idx.modify ( itr, same_payer, [&]( auto& loan ) {
          loan.total_staked.amount = rented_tokens;
-         loan.expiration         += eosio::days(30);
+         loan.expiration         += XST_FLAG::days(30);
          loan.balance.amount     -= loan.payment.amount;
       });
       return delta_stake;
@@ -546,7 +553,7 @@ namespace eosiosystem {
          return { delete_loan, delta_stake };
       };
 
-      /// transfer from eosio.names to eosio.rex
+      /// transfer from XST_FLAG.names to XST_FLAG.rex
       if ( pool->namebid_proceeds.amount > 0 ) {
          channel_to_rex( names_account, pool->namebid_proceeds );
          _rexpool.modify( pool, same_payer, [&]( auto& rt ) {
@@ -607,7 +614,7 @@ namespace eosiosystem {
                      order.close();
                   });
                   /// send dummy action to show owner and proceeds of filled sellrex order
-                  rex_results::orderresult_action order_act( rex_account, std::vector<eosio::permission_level>{ } );
+                  rex_results::orderresult_action order_act( rex_account, std::vector<XST_FLAG::permission_level>{ } );
                   order_act.send( order_owner, result.proceeds );
                }
             }
@@ -744,11 +751,11 @@ namespace eosiosystem {
          c.payment      = payment;
          c.balance      = fund;
          c.total_staked = asset( rented_tokens, core_symbol() );
-         c.expiration   = current_time_point() + eosio::days(30);
+         c.expiration   = current_time_point() + XST_FLAG::days(30);
          c.loan_num     = pool->loan_num;
       });
 
-      rex_results::rentresult_action rentresult_act{ rex_account, std::vector<eosio::permission_level>{ } };
+      rex_results::rentresult_action rentresult_act{ rex_account, std::vector<XST_FLAG::permission_level>{ } };
       rentresult_act.send( asset{ rented_tokens, core_symbol() } );
       return rented_tokens;
    }
@@ -925,7 +932,7 @@ namespace eosiosystem {
          // inline transfer to rex_account
          token::transfer_action transfer_act{ token_account, { from, active_permission } };
          transfer_act.send( from, rex_account, amount,
-                            std::string("transfer from ") + from.to_string() + " to eosio.rex" );
+                            std::string("transfer from ") + from.to_string() + " to XST_FLAG.rex" );
       }
 #endif
    }
@@ -1215,4 +1222,6 @@ namespace eosiosystem {
       }
    }
 
-}; /// namespace eosiosystem
+}; /// namespace XST_SYSTEM
+
+#endif // !RESOURCE_UNLIMIT
