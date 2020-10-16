@@ -41,8 +41,15 @@ chmod 777 clutxo
 ./clutxo receive -r
 ```
 
-### 2.trading
-![](https://miro.medium.com/max/4012/1*9Mh0fzsxsJtNxaC1gF3p4Q.png)
+### 2.Trading
+
+| Sender       | Receiver     | Privacy                                                      | UTXO specific wallet needed |
+| ------------ | ------------ | ------------------------------------------------------------ | --------------------------- |
+| Account      | Account      | No privacy, the transaction will be traceable and the balance change visible | No                          |
+| UTXO Address | Account      | Sender is kept private, Receiver's XST balance increase will be publicly visible | Yes                         |
+| UTXO Address | UTXO Address | Max Privacy. Transaction will be private and untraceable     | Yes                         |
+| Account      | UTXO Address | Sender's balance will decrease but it will be impossible to trace the receiving address | Yes                         |
+
 > fees is not necessary
 
 ```bash
