@@ -10,6 +10,8 @@ Deploy node and contract
 
 ## ./cmd/
 
+`ln -s cmd.js clutxo`
+
 The command line utility `clutxo` provides an interface to the UTXO 
 enabled UTXO smart contract. 
 
